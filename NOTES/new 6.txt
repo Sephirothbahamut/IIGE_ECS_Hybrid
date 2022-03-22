@@ -1,0 +1,18 @@
+
+
+function* step
+function* collision_resolutions
+...
+
+
+game loop
+	{
+	//rendering magic
+	collision_detection();
+	user_collision_resolutions();
+	remove_collided_with();
+	
+	inner_step();
+	inheritance_step();
+	user_step();
+	}

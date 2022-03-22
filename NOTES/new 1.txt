@@ -1,0 +1,73 @@
+
+
+components:
+collides_with<component ...Ts>	collided_with<component ...Ts>
+								T1& _1,
+								T2& _2,
+								...
+
+engine collision_system
+	{
+	
+	foreach something : collides_with<...> //for each different type of collides_with
+	
+		auto view{ecs.get<something>}; 
+		auto targets{ecs.get<something::Ts...};
+		
+		auto ???{broad_phase(view, targets)}
+		narrow_phase ...
+			{
+			//if element of view, collides with element of targets
+			element of view.add_component<collided_with<something::Ts...>>(element of targets);
+			}
+	}
+	
+	
+game system
+	{
+	auto view{ecs.get<collided_width<quello che mi serve>};
+	fa cose
+	}
+	
+class projectile
+	{
+	projectile() 
+		{
+		add_component<collider<point>>();
+		add_component<damage>();
+		add_component<collides_with<hitpoints>>();
+		add_component<collides_with<destroy_on_hit>>();
+		}
+	}
+	
+class ship
+	{
+	ship()
+		{
+		add_component<collider<polygon>>();
+		add_component<hitpoints>
+		}
+	}
+class asteroid
+	{
+	ship()
+		{
+		add_component<collider<polygon>>();
+		add_component<destroy_on_hit>
+		}
+	}
+	
+void system()
+	{
+	auto view{ecs.get<collides_with<hitpoints>, damage>()};
+	view.each([](const collides_with<hitpoints> &cw, damage &d) 
+		{
+		cw.get<hitpoints>() -= d;
+		});
+		
+	auto view{ecs.get<collides_with<destroy_on_hit>>()};
+	view.each([](const collides_with<destroy_on_hit> &cw) 
+		{
+		cw.destroy();
+		});
+	}

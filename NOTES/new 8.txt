@@ -1,0 +1,71 @@
+
+enum class layer_t {}; //defined on game code side
+
+in_world			moving										has_sprite    has_collision<layer_t layer> collides<layer_t target_layer>
+transform current	transform speed, transform prev_transform	sprite sprite collider collider            callback(game_object&) 
+
+																			  has_collision 
+                                                                              collider collider, size_t layer         
+
+class projectile : public game_object /*creates empty entity*/, 
+	public collision_resolution<hitpoints> 
+	public collision_resolution<push> 
+	{
+	virtual resolve_collision<hitpoints>(hitpoints& hitpoints) override
+		{
+		hitpoints -= my_damage;
+		}
+	virtual resolve_collision<push>(push& push) override
+		{
+		push = collision_vector;
+		}
+	
+	}
+class pippo : game_object
+
+foo(pippo*)
+foo(projectile*)
+
+foo(game_object*) //
+
+system collision()
+	{
+	auto view{registry.view<collides>()};
+	
+	//TODO broadphaseizate
+	for(...)
+		{
+		size_t target_layer{collides.target_layer};
+		auto targets_view{registry<has_collision only on target_layer?>}
+		for(...)
+			{
+			
+			collides.entity.instance->collision_resolution<hitpoints>(target);
+			}
+		}
+	
+	}
+
+system draw(render_target, delta_time)
+	{
+	//draw non moving objects
+	auto view{registry.view<get_t<const in_world, const has_sprite>, exclude_t<moving>>()};
+	
+	for(...)
+		{
+		has_sprite->sprite.position = in_world->transform.position;
+		has_sprite->...
+		render_target.draw(hass_sprite->sprite);
+		}
+	
+	
+	auto view{registry.view<const in_world, const has_sprite, const moving>>()};
+	for(...)
+		{
+		transform interpolated{transform::lerp(prev_transform, current, step_time/delta_time???)};
+		has_sprite->sprite.position = in_world->interpolated.position;
+		has_sprite->...
+		render_target.draw(hass_sprite->sprite);
+		}
+	}
+	
