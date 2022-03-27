@@ -162,6 +162,7 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="attempt_scene.h" />
     <ClInclude Include="ecs\components\bad_draw.h" />
     <ClInclude Include="ecs\components\speed.h" />
     <ClInclude Include="ecs\components\transform.h" />

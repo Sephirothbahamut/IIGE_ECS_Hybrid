@@ -142,18 +142,20 @@ int main()
 
 	iige::Scene scene;
 
+	utils::math::Transform2 t{.position{200.f, 150.f}, .orientation{}};
+
 	for (size_t i = 0; i < 3000; i++)
 		{
 		auto entity{scene.ecs_registry.create()};
-		scene.ecs_registry.emplace<iige::ecs::components::transform>(entity, utils::math::Transform2{.position{500.f, 350.f}, .orientation{}});
+		scene.ecs_registry.emplace<iige::ecs::components::transform>(entity, t);
 		scene.ecs_registry.emplace<iige::ecs::components::speed>(entity, utils::math::Transform2{.position{10.f, 10.f}, .orientation{5_deg}});
 		scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity, 32.f);
 		scene.ecs_registry.emplace<iige::ecs::components::interpolated>(entity);
-		scene.ecs_registry.emplace<iige::ecs::components::transform_next>(entity);
+		scene.ecs_registry.emplace<iige::ecs::components::transform_next>(entity, t);
 		}
 
 
-	iige::Loop loop{scene, window, 10.f};
+	iige::Loop loop{scene, window, .5f};
 
 	loop.run();
 

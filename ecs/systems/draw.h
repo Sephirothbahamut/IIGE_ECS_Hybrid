@@ -13,7 +13,7 @@
 
 namespace iige::ecs::systems
 	{
-	void draw(const Scene& scene, sf::RenderWindow& window)
+	void draw(Scene& scene, sf::RenderWindow& window)
 		{
 		/*auto static_view{scene.ecs_registry.view<components::bad_draw, components::transform>(entt::exclude<components::interpolated>)};
 
@@ -27,7 +27,7 @@ namespace iige::ecs::systems
 
 		movement_view.each([&](const auto& transform, auto& drawable)
 			{
-			//drawable.circle.setPosition(sfml::vec_cast<sf::Vector2, float>(transform.t.position));
+			drawable.circle.setPosition(sfml::vec_cast<sf::Vector2, float>(transform.t.position));
 			window.draw(drawable.circle);
 			});
 		}

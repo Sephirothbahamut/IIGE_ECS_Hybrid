@@ -59,5 +59,8 @@
     <ClInclude Include="ecs\components\transform.h">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="attempt_scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

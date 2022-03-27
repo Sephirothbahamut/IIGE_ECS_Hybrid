@@ -13,24 +13,24 @@
 
 namespace iige::ecs::systems
 	{
-	void move(const Scene& scene)
+	void move(Scene& scene)
 		{
 		auto movement_view{scene.ecs_registry.view<components::transform, components::speed, components::transform_next>()};
 
-		movement_view.each([](const auto& transform, const auto& speed, auto& transform_next)
+		movement_view.each([](components::transform& transform, const components::speed& speed, components::transform_next& transform_next)
 			{
-			/*auto tmp{transform_next};
-			transform_next = transform + speed;
-			transform = tmp;*/
+			auto tmp{transform_next};
+			transform_next.t = transform.t + speed.t;
+			transform.t = tmp.t;
 			});
 		}
-	void interpolate(const Scene& scene, float interpolation)
+	void interpolate(Scene& scene, float interpolation)
 		{
 		auto movement_view{scene.ecs_registry.view<components::transform, components::transform_next, components::interpolated>()};
 
-		/*movement_view.each([interpolation](const components::transform& transform, const components::transform_next& transform_next, components::interpolated& interpolated)
+		movement_view.each([interpolation](const components::transform& transform, const components::transform_next& transform_next, components::interpolated& interpolated)
 			{
-			interpolated = {utils::math::Transform2::lerp(transform.t, transform_next.t, interpolation)};
-			});*/
+			interpolated.t = { utils::math::Transform2::lerp(transform.t, transform_next.t, interpolation) };
+			});
 		}
 	}

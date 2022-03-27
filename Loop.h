@@ -10,7 +10,7 @@
 
 namespace iige
 	{
-	//template <typename Scene_t>
+	template <typename Scene_t>
 	class Loop
 		{
 		using Scene_t = Scene;
@@ -56,10 +56,10 @@ namespace iige
 						while (window.poll_event(event)) {}
 
 						ecs::systems::move(scene);
-						//scene.update();
-						//scene.movement_step();
-						//scene.collisions();
-						//scene.step();
+						scene.update();
+						scene.movement_step();
+						scene.collisions();
+						scene.step();
 
 						next_step_time += fixed_delta_time;
 						}
@@ -67,8 +67,8 @@ namespace iige
 					interpolation = (clock.getElapsedTime() + fixed_delta_time - next_step_time) / fixed_delta_time;
 
 					frames_counter++;
-					//scene.draw(window, interpolation);
 					window.sf_window.clear();
+					scene.draw(window, interpolation);
 					ecs::systems::interpolate(scene, interpolation);
 					ecs::systems::draw(scene, window.sf_window);
 					window.sf_window.display();
