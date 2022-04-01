@@ -6,8 +6,8 @@ namespace iige::ecs::components
 	{
 	struct bad_draw
 		{
-		bad_draw(float radius) : circle{radius} {}
+		bad_draw(float size) : cs{{size, size}} {}
 
-		sf::CircleShape circle;
+		sf::RectangleShape cs;
 		};
 	}

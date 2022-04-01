@@ -9,8 +9,4 @@ namespace iige::ecs::components
 	struct transform_next { utils::math::Transform2 t; };
 	struct speed          { utils::math::Transform2 t; };
 
-	transform_next operator+(const transform& a, const speed& b)
-		{
-		return {a.t + b.t};
-		}
 	}

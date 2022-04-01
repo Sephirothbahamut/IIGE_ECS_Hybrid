@@ -5,34 +5,34 @@
 
 #include "ecs/systems/move.h"
 #include "ecs/systems/draw.h"
+#include "ecs/systems/collision.h"
+#include "Scene.h"
 
 #include "Window.h"
 
 namespace iige
 	{
-	template <typename Scene_t>
 	class Loop
 		{
-		using Scene_t = Scene;
 		private:
 			static constexpr bool log_enabled = true;
 
-			utils::observer_ptr<Scene_t> scene {nullptr};
-			utils::observer_ptr<Window>  window{nullptr};
+			utils::observer_ptr<Scene> scene {nullptr};
+			utils::observer_ptr<Window> window{nullptr};
+			utils::observer_ptr<ecs::systems::collision> collision{nullptr};
 
 			const float steps_per_second = 1.f;
 			const sf::Time fixed_delta_time{sf::seconds(1.f / steps_per_second)};
 			const size_t max_frameskip = 5;
 
 		public:
-			Loop(Scene_t& scene, Window& window, float steps_per_second = 1.f) noexcept : scene(&scene), window(&window), steps_per_second(steps_per_second)
+			Loop(Scene& scene, Window& window, ecs::systems::collision& collision, float steps_per_second = 1.f) noexcept : scene{&scene}, window{&window}, collision{&collision}, steps_per_second{steps_per_second}
 				{}
-
 
 			void run()
 				{
 				// https://dewitters.com/dewitters-gameloop/
-				Scene_t& scene  = *this->scene;
+				Scene& scene  = *this->scene;
 				Window&  window = *this->window;
 
 				sf::Clock clock;
@@ -56,10 +56,7 @@ namespace iige
 						while (window.poll_event(event)) {}
 
 						ecs::systems::move(scene);
-						scene.update();
-						scene.movement_step();
-						scene.collisions();
-						scene.step();
+						(*collision)(scene);
 
 						next_step_time += fixed_delta_time;
 						}
@@ -67,11 +64,10 @@ namespace iige
 					interpolation = (clock.getElapsedTime() + fixed_delta_time - next_step_time) / fixed_delta_time;
 
 					frames_counter++;
-					window.sf_window.clear();
-					scene.draw(window, interpolation);
+					//window.sf_window.clear();
 					ecs::systems::interpolate(scene, interpolation);
 					ecs::systems::draw(scene, window.sf_window);
-					window.sf_window.display();
+					//window.sf_window.display();
 					}
 				}
 		};

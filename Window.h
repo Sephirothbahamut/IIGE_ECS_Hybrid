@@ -3,8 +3,6 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "sfml_interfacing/vec.h"
-
 namespace iige
 	{
 	class Display
@@ -29,7 +27,7 @@ namespace iige
 
 			Window(const create_info& create_info) : sf_window{sf::VideoMode{create_info.size.x, create_info.size.y}, create_info.title, sf::Style::Resize, sf::ContextSettings{0, 0, 8}}
 				{
-				sf_window.setPosition(sfml::vec_cast<sf::Vector2, int>(create_info.position));
+				sf_window.setPosition(utils::math::vec_cast<sf::Vector2, int>(create_info.position));
 				}
 
 			Window(const Window& copy)            = delete;

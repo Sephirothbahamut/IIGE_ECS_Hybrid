@@ -30,6 +30,9 @@
     <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Fakemain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Loop.h">
@@ -41,16 +44,16 @@
     <ClInclude Include="Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sfml_interfacing\vec.h">
-      <Filter>Header Files\sfml_interfacing</Filter>
-    </ClInclude>
-    <ClInclude Include="ecs\systems\move.h">
-      <Filter>Header Files\ecs\systems</Filter>
-    </ClInclude>
-    <ClInclude Include="ecs\systems\draw.h">
-      <Filter>Header Files\ecs\systems</Filter>
+    <ClInclude Include="attempt_scene.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ecs\components\bad_draw.h">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs\components\collides_with.h">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs\components\has_collision.h">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
     <ClInclude Include="ecs\components\speed.h">
@@ -59,8 +62,14 @@
     <ClInclude Include="ecs\components\transform.h">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
-    <ClInclude Include="attempt_scene.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ecs\systems\draw.h">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs\systems\move.h">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs\systems\collision.h">
+      <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
