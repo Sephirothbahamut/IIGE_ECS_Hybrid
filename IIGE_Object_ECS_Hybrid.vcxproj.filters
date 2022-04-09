@@ -33,6 +33,12 @@
     <ClCompile Include="Fakemain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ecs\components\spatial.cpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClCompile>
+    <ClCompile Include="ecs\components\collision.cpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Loop.h">
@@ -50,16 +56,10 @@
     <ClInclude Include="ecs\components\bad_draw.h">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
-    <ClInclude Include="ecs\components\collides_with.h">
+    <ClInclude Include="ecs\components\collision.h">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
-    <ClInclude Include="ecs\components\has_collision.h">
-      <Filter>Header Files\ecs\components</Filter>
-    </ClInclude>
-    <ClInclude Include="ecs\components\speed.h">
-      <Filter>Header Files\ecs\components</Filter>
-    </ClInclude>
-    <ClInclude Include="ecs\components\transform.h">
+    <ClInclude Include="ecs\components\spatial.h">
       <Filter>Header Files\ecs\components</Filter>
     </ClInclude>
     <ClInclude Include="ecs\systems\draw.h">

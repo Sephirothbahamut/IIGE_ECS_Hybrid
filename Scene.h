@@ -2,7 +2,7 @@
 
 #include <entt.h>
 
-#include "ecs/components/transform.h"
+#include "ecs/components/spatial.h"
 
 namespace iige
 	{

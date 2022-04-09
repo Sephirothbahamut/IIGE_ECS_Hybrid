@@ -7,9 +7,10 @@
 
 #include <entt.h>
 
-#include "../components/collides_with.h"
-#include "../components/has_collision.h"
-#include "../components/transform.h"
+#include "../components/collision.h"
+#include "../components/spatial.h"
+
+#include "../../Window.h"
 #include "../../Scene.h"
 
 
@@ -42,25 +43,39 @@ namespace iige::ecs::systems
 			template<size_t layer>
 			void evaluate(iige::Scene& scene) const noexcept
 				{
-
-				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::collider, components::transform>()};
-				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::collider, components::transform>()};
-
-				//active.each([&](const components::collides_with<layer>& collides_with, const components::collider& a_collider_variant, const components::transform& a_transform)
-				active.each([&](const auto& collides_with, const components::collider& a_collider_variant, const components::transform& a_transform)
-					{
-					targets.each([&](const auto& has_collision, const components::collider& b_collider_variant, const components::transform& b_transform)
-						{
-						std::visit([&](const auto& a_collider)
-							{
-							std::visit([&](const auto& b_collider)
-								{
-								bool collides{utmg::collides(a_collider, b_collider)};
-								if (collides) { std::cout << "A collision!!!\n"; }
-								}, b_collider_variant);
-							}, a_collider_variant);
-						});
-					});
+				//auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::collider>()};
+				//auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::collider>()};
+				//
+				////active.each([&](const components::collides_with<layer>& collides_with, const components::collider& a_collider_variant, const components::transform& a_transform)
+				//active.each([&](const auto& collides_with, const components::collider& a_collider_variant)
+				//	{
+				//	targets.each([&](const auto& has_collision, const components::collider& b_collider_variant)
+				//		{
+				//		std::visit([&](const auto& a_collider)
+				//			{
+				//			std::visit([&](const auto& b_collider)
+				//				{
+				//				bool collides{utmg::collides(a_collider, b_collider)};
+				//				if (collides) { std::cout << "A collision!!!\n"; }
+				//				}, b_collider_variant);
+				//			}, a_collider_variant);
+				//		});
+				//	});
 				}
 		};
+
+
+	void draw_colliders(iige::Scene& scene, sf::RenderWindow& window)
+		{
+		sf::VertexArray va{sf::PrimitiveType::Lines};
+
+		auto colliders_not_colliding{scene.ecs_registry.view<components::transform, components::collider>()};
+		auto colliders_____colliding{scene.ecs_registry.view<components::transform, components::collider, components::collided_with>()};
+
+		colliders_not_colliding.each([&](const utils::math::Transform2& transform, const components::collider& drawable)
+			{
+
+
+			});
+		}
 	}

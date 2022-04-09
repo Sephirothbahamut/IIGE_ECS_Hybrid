@@ -1,5 +1,7 @@
 #include <SFML/Graphics.hpp>
 
+#include <sstream>
+
 #include <utils/memory.h>
 
 #include <utils/math/geometry/polygon.h>
@@ -10,6 +12,9 @@
 namespace utmg = utils::math::geometry;
 namespace utm = utils::math;
 
+inline sf::Font font;
+
+
 sf::VertexArray to_sf(const utmg::polygon& polygon, const sf::Color& color) noexcept
 	{
 	sf::VertexArray ret{sf::LineStrip, polygon.get_vertices().size() + 1};
@@ -18,11 +23,36 @@ sf::VertexArray to_sf(const utmg::polygon& polygon, const sf::Color& color) noex
 		const auto& vertex{polygon.get_vertices()[i]};
 		ret[i].position = {vertex.x, vertex.y};
 		ret[i].color = color;
+
+		std::stringstream ss;
+		ss << vertex.x << ", " << vertex.y;
+
+		sf::Text text{ss.str(), font};
+		text.setPosition(vertex.x, vertex.y);
+		text.setFillColor(sf::Color::Yellow);
 		}
 	ret[polygon.get_vertices().size()] = ret[0];
 
 	return ret;
 	}
+
+void stuff(const utmg::polygon& polygon, sf::RenderTarget& rt)
+	{
+	for (size_t i = 0; i < polygon.get_vertices().size(); i++)
+		{
+		const auto& vertex{polygon.get_vertices()[i]};
+
+		std::stringstream ss;
+		ss << vertex.x << ", " << vertex.y;
+
+		sf::Text text{ss.str(), font, 12};
+		text.setPosition(vertex.x, vertex.y);
+		text.setFillColor(sf::Color::Yellow);
+
+		rt.draw(text);
+		}
+	}
+
 sf::CircleShape to_sf(const utmg::circle& circle, const sf::Color& color) noexcept
 	{
 	sf::CircleShape s{circle.radius};
@@ -67,8 +97,10 @@ sf::RectangleShape to_sf(const utmg::aabb& aabb, const sf::Color& color) noexcep
 	return ret;
 	}
 
-int main()
+int mainz()
 	{
+	if (!font.loadFromFile("data/fonts/consola.ttf")) { return 0; }
+
 	using namespace utils::angle::literals;
 	using namespace utils::math::geometry::transformations;
 	using poly_convex = utmg::convex_polygon;
@@ -79,14 +111,16 @@ int main()
 
 	utmg::segment src_segment{{-10, 0}, {10, 0}};
 	utm::vec2f   src_point{0, 0};
-	poly_convex   src_poly{{{-10, -10}, {10, -10}, {10, 10},         {-10, 10}}};
+	//poly_convex   src_poly{{{-10, -10}, {10, -10}, {10, 10},         {-10, 10}}};
 	poly_gon      src_cttv{{{-10, -10}, {-5, 0}, { 10, -10 }, {10, 10}, {0, 0}, {-10, 10}}};
 	utmg::circle  src_circle{{0, 0}, 10};
 	utmg::aabb    src_aabb{.ll = 0, .up = 0, .rr = 20, .dw = 10};
+	
+	poly_convex src_poly{{0, 0}, {100, 50}, {50, 100}};
 
 	utm::Transform2	tr_segment{{200, 300},  58_deg, 1.f};
 	utm::Transform2	tr_point{{100, 400},  24_deg, 1.f};
-	utm::Transform2	tr_poly{{250, 300}, 105_deg, 1.f};
+	utm::Transform2	tr_poly{{250, 300}, /*105_deg*/0_deg, 1.f};
 	utm::Transform2	tr_cttv{{250, 300}, 105_deg, 1.f};
 	utm::Transform2	tr_circle{{350, 400},  75_deg, 1.f};
 	utm::Transform2	tr_aabb{{350, 400},  75_deg, 1.f};
@@ -153,33 +187,35 @@ int main()
 				}
 			}
 		//step
-		bool st{utmg::collides(segment, point)};
-		bool sp{utmg::collides(segment, poly)};
-		bool sv{utmg::collides(segment, cttv)};
-		bool tp{utmg::collides(point, poly)};
+		//bool st{utmg::collides(segment, point)};
+		//bool sp{utmg::collides(segment, poly)};
+		//bool sv{utmg::collides(segment, cttv)};
+		//bool tp{utmg::collides(point, poly)};
 		bool tv{utmg::collides(point, cttv)};
-		bool pc{utmg::collides(poly, circle)};
-		bool vc{utmg::collides(cttv, circle)};
-		bool tc{utmg::collides(point, circle)};
-		bool cs{utmg::collides(circle, segment)};
-		bool pv{utmg::collides(poly, cttv)};
-
-		bool at{utmg::collides(aabb, point)};
-		bool ap{utmg::collides(aabb, poly)};
-		bool as{utmg::collides(aabb, segment)};
-		bool av{utmg::collides(aabb, cttv)};
-		bool ac{utmg::collides(aabb, circle)};
+		//bool pc{utmg::collides(poly, circle)};
+		//bool vc{utmg::collides(cttv, circle)};
+		//bool tc{utmg::collides(point, circle)};
+		//bool cs{utmg::collides(circle, segment)};
+		//bool pv{utmg::collides(poly, cttv)};
+		//
+		//bool at{utmg::collides(aabb, point)};
+		//bool ap{utmg::collides(aabb, poly)};
+		//bool as{utmg::collides(aabb, segment)};
+		//bool av{utmg::collides(aabb, cttv)};
+		//bool ac{utmg::collides(aabb, circle)};
 
 
 		//draw
 		rw.clear();
 
-		rw.draw(to_sf(segment, (st || sp || cs || sv || as) ? sf::Color::Red : sf::Color::White));
-		rw.draw(to_sf(point, (tp || tc || st || tv || at) ? sf::Color::Red : sf::Color::White));
-		rw.draw(to_sf(poly, (tp || sp || pc || pv || ap) ? sf::Color::Red : sf::Color::White));
-		rw.draw(to_sf(circle, (pc || tc || cs || vc || ac) ? sf::Color::Red : sf::Color::White));
-		rw.draw(to_sf(cttv, (pv || vc || tv || sv || av) ? sf::Color::Red : sf::Color::White));
-		rw.draw(to_sf(aabb, (at || ap || as || av || ac) ? sf::Color::Red : sf::Color::White));
+		//rw.draw(to_sf(segment, (st || sp || cs || sv || as) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(point,   (/*tp || tc || st || */tv /*|| at*/) ? sf::Color::Red : sf::Color::White));
+		//rw.draw(to_sf(poly,    (tp || sp || pc || pv || ap) ? sf::Color::Red : sf::Color::White));
+		//rw.draw(to_sf(circle,  (pc || tc || cs || vc || ac) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(cttv,    (/*pv || vc ||*/ tv /*|| sv || av*/) ? sf::Color::Red : sf::Color::White));
+		//rw.draw(to_sf(aabb,    (at || ap || as || av || ac) ? sf::Color::Red : sf::Color::White));
+
+		stuff(cttv, rw);
 
 		rw.display();
 		}

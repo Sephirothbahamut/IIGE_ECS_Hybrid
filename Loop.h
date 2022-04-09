@@ -64,10 +64,10 @@ namespace iige
 					interpolation = (clock.getElapsedTime() + fixed_delta_time - next_step_time) / fixed_delta_time;
 
 					frames_counter++;
-					//window.sf_window.clear();
+					window.sf_window.clear();
 					ecs::systems::interpolate(scene, interpolation);
 					ecs::systems::draw(scene, window.sf_window);
-					//window.sf_window.display();
+					window.sf_window.display();
 					}
 				}
 		};

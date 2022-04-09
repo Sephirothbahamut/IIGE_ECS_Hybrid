@@ -159,16 +159,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ecs\components\collision.cpp" />
+    <ClCompile Include="ecs\components\spatial.cpp" />
     <ClCompile Include="Fakemain.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="attempt_scene.h" />
     <ClInclude Include="ecs\components\bad_draw.h" />
-    <ClInclude Include="ecs\components\collides_with.h" />
-    <ClInclude Include="ecs\components\has_collision.h" />
-    <ClInclude Include="ecs\components\speed.h" />
-    <ClInclude Include="ecs\components\transform.h" />
+    <ClInclude Include="ecs\components\collision.h" />
+    <ClInclude Include="ecs\components\spatial.h" />
     <ClInclude Include="ecs\systems\collision.h" />
     <ClInclude Include="ecs\systems\draw.h" />
     <ClInclude Include="ecs\systems\move.h" />
