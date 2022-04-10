@@ -97,7 +97,7 @@ sf::RectangleShape to_sf(const utmg::aabb& aabb, const sf::Color& color) noexcep
 	return ret;
 	}
 
-int mainz()
+int mainm()
 	{
 	if (!font.loadFromFile("data/fonts/consola.ttf")) { return 0; }
 
@@ -177,43 +177,43 @@ int mainz()
 								case sf::Keyboard::Subtract: selected_transform->size /= 2; break;
 								}
 							}
-						segment = {src_segment * tr_segment};
-						point = {src_point * tr_point};
-						poly = {src_poly * tr_poly};
-						cttv = {src_cttv * tr_cttv};
-						circle = {src_circle * tr_circle};
-						aabb = {src_aabb * tr_aabb};
+						segment = src_segment * tr_segment;
+						point   = src_point   * tr_point;
+						poly    = src_poly    * tr_poly;
+						cttv    = src_cttv    * tr_cttv;
+						circle  = src_circle  * tr_circle;
+						aabb    = src_aabb    * tr_aabb;
 						}
 				}
 			}
 		//step
-		//bool st{utmg::collides(segment, point)};
-		//bool sp{utmg::collides(segment, poly)};
-		//bool sv{utmg::collides(segment, cttv)};
-		//bool tp{utmg::collides(point, poly)};
+		bool st{utmg::collides(segment, point)};
+		bool sp{utmg::collides(segment, poly)};
+		bool sv{utmg::collides(segment, cttv)};
+		bool tp{utmg::collides(point, poly)};
 		bool tv{utmg::collides(point, cttv)};
-		//bool pc{utmg::collides(poly, circle)};
-		//bool vc{utmg::collides(cttv, circle)};
-		//bool tc{utmg::collides(point, circle)};
-		//bool cs{utmg::collides(circle, segment)};
-		//bool pv{utmg::collides(poly, cttv)};
-		//
-		//bool at{utmg::collides(aabb, point)};
-		//bool ap{utmg::collides(aabb, poly)};
-		//bool as{utmg::collides(aabb, segment)};
-		//bool av{utmg::collides(aabb, cttv)};
-		//bool ac{utmg::collides(aabb, circle)};
+		bool pc{utmg::collides(poly, circle)};
+		bool vc{utmg::collides(cttv, circle)};
+		bool tc{utmg::collides(point, circle)};
+		bool cs{utmg::collides(circle, segment)};
+		bool pv{utmg::collides(poly, cttv)};
+		
+		bool at{utmg::collides(aabb, point)};
+		bool ap{utmg::collides(aabb, poly)};
+		bool as{utmg::collides(aabb, segment)};
+		bool av{utmg::collides(aabb, cttv)};
+		bool ac{utmg::collides(aabb, circle)};
 
 
 		//draw
 		rw.clear();
 
-		//rw.draw(to_sf(segment, (st || sp || cs || sv || as) ? sf::Color::Red : sf::Color::White));
-		rw.draw(to_sf(point,   (/*tp || tc || st || */tv /*|| at*/) ? sf::Color::Red : sf::Color::White));
-		//rw.draw(to_sf(poly,    (tp || sp || pc || pv || ap) ? sf::Color::Red : sf::Color::White));
-		//rw.draw(to_sf(circle,  (pc || tc || cs || vc || ac) ? sf::Color::Red : sf::Color::White));
-		rw.draw(to_sf(cttv,    (/*pv || vc ||*/ tv /*|| sv || av*/) ? sf::Color::Red : sf::Color::White));
-		//rw.draw(to_sf(aabb,    (at || ap || as || av || ac) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(segment, (st || sp || cs || sv || as) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(point,   (tp || tc || st || tv || at) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(poly,    (tp || sp || pc || pv || ap) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(circle,  (pc || tc || cs || vc || ac) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(cttv,    (pv || vc || tv || sv || av) ? sf::Color::Red : sf::Color::White));
+		rw.draw(to_sf(aabb,    (at || ap || as || av || ac) ? sf::Color::Red : sf::Color::White));
 
 		stuff(cttv, rw);
 

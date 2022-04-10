@@ -3,15 +3,23 @@
 
 namespace iige::ecs::components
 	{
-	collider operator*(const collider& collider, const components::transform& transform) noexcept
+	collider operator&(const collider& collider, const components::transform& transform) noexcept
 		{
-		using namespace utils::math::geometry::transformations;
-		return std::visit([&](const auto& collider)->components::collider { return collider * transform; }, collider);
+		return std::visit([&](const auto& collider)->components::collider 
+			{
+			using namespace utils::math::geometry::transformations;
+			return collider * transform; 
+			}, collider);
+		return {};
 		}
-	collider& operator*=(collider& collider, const components::transform& transform) noexcept
+	collider& operator&=(collider& collider, const components::transform& transform) noexcept
 		{
-		using namespace utils::math::geometry::transformations;
-		return collider = std::visit([&](const auto& collider)->components::collider { return collider * transform; }, collider);
+		return collider = std::visit([&](const auto& collider)->components::collider 
+			{
+			using namespace utils::math::geometry::transformations;
+			return collider * transform; 
+			}, collider);
+		return collider;
 		}
 
 	void add_collision(entt::registry& registry, entt::entity entity, const components::collider& collider)
@@ -22,7 +30,7 @@ namespace iige::ecs::components
 		if (transform)
 			{
 			utils::discard(registry.get_or_emplace<components::collider_source>(entity, collider));
-			current_collider *= *transform;
+			current_collider &= *transform;
 			}
 		}
 	}

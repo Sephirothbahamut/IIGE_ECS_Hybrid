@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <functional>
+
 #include <utils/memory.h>
 #include <utils/logger.h>
 
@@ -29,11 +32,15 @@ namespace iige
 			Loop(Scene& scene, Window& window, ecs::systems::collision& collision, float steps_per_second = 1.f) noexcept : scene{&scene}, window{&window}, collision{&collision}, steps_per_second{steps_per_second}
 				{}
 
+			std::vector<std::function<void(Scene&, Window&)>> user_systems;
+
 			void run()
 				{
 				// https://dewitters.com/dewitters-gameloop/
 				Scene& scene  = *this->scene;
 				Window&  window = *this->window;
+
+				sf::VertexArray colliders_vertex_array{sf::PrimitiveType::Lines};
 
 				sf::Clock clock;
 				sf::Time next_step_time = clock.getElapsedTime();
@@ -57,6 +64,14 @@ namespace iige
 
 						ecs::systems::move(scene);
 						(*collision)(scene);
+						ecs::systems::update_colliders_vertex_array(scene, colliders_vertex_array);
+
+						// User/gameplay systems
+						for (const auto& user_system : user_systems)
+							{
+							user_system(scene, window);
+							}
+
 
 						next_step_time += fixed_delta_time;
 						}
@@ -67,6 +82,7 @@ namespace iige
 					window.sf_window.clear();
 					ecs::systems::interpolate(scene, interpolation);
 					ecs::systems::draw(scene, window.sf_window);
+					window.sf_window.draw(colliders_vertex_array);
 					window.sf_window.display();
 					}
 				}

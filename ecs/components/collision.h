@@ -9,6 +9,8 @@
 
 #include <entt.h>
 
+#include <SFML/Graphics.hpp>
+
 #include "spatial.h"
 
 namespace iige::ecs::components
@@ -21,9 +23,9 @@ namespace iige::ecs::components
 		namespace utm = utils::math;
 		}
 
-	using collider = std::variant<utm::vec2f, /*utmg::aabb,*/ utmg::circle, utmg::polygon>;
-	collider  operator* (const collider& collider, const components::transform& transform) noexcept;
-	collider& operator*=(      collider& collider, const components::transform& transform) noexcept;
+	using collider = std::variant</*utm::vec2f,*/ utmg::segment, utmg::aabb, utmg::circle, utmg::polygon>;
+	collider  operator& (const collider& collider, const components::transform& transform) noexcept;
+	collider& operator&=(      collider& collider, const components::transform& transform) noexcept;
 
 	struct collider_source : collider //moving objects will keep the original collider stored here
 		{
@@ -43,4 +45,5 @@ namespace iige::ecs::components
 	struct collided_with { entt::entity other{entt::null}; };
 
 	void add_collision(entt::registry& registry, entt::entity entity, const components::collider& collider = {});
+
 	}
