@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entt.h>
+#include "../entt.h"
 
 #include "../../Window.h"
 #include "../../Scene.h"

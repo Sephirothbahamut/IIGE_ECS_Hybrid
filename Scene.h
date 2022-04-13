@@ -1,8 +1,6 @@
 #pragma once
 
-#include <entt.h>
-
-#include "ecs/components/spatial.h"
+#include "ecs/entt.h"
 
 namespace iige
 	{

@@ -7,7 +7,7 @@
 #include <utils/variant.h>
 #include <utils/math/angle.h>
 
-#include <entt.h>
+#include "../entt.h"
 
 #include "../components/collision.h"
 #include "../components/spatial.h"
@@ -50,99 +50,129 @@ namespace iige::ecs::systems
 			template<size_t layer>
 			void evaluate(iige::Scene& scene) const noexcept
 				{
-				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::collider>()};
-				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::collider>()};
-				
-				active.each([&](const entt::entity entity_a, const components::collider& a_collider_variant)
+				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::aabb, components::colliders::ptr>()};
+				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::colliders::aabb, components::colliders::ptr>()};
+
+
+				active.each([&](const entt::entity entity_a, const components::colliders::aabb& a_aabb, components::colliders::ptr a_collider_ptr)
 					{
-					targets.each([&](const entt::entity entity_b, const components::collider& b_collider_variant)
+					targets.each([&](const entt::entity entity_b, const components::colliders::aabb& b_aabb, components::colliders::ptr b_collider_ptr)
 						{
 						if (entity_a == entity_b) { return; }
 
-						std::visit([&](const auto& a_collider)
+						if (utmg::collides(a_aabb.data, b_aabb.data))
 							{
-							std::visit([&](const auto& b_collider)
+							bool collides{false};
+
+
+							std::visit([&](const auto& a_collider_ptr)
 								{
-								if (!utmg::collides(static_cast<utmg::aabb>(a_collider), static_cast<utmg::aabb>(b_collider))) { return; }
+								std::visit([&](const auto& b_collider_ptr)
+									{
+									bool collides{utmg::collides(a_collider_ptr->data, b_collider_ptr->data)};
+									if (collides) { utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b)); }
+									}, b_collider_ptr);
+								}, a_collider_ptr);
 
-
-								bool collides{utmg::collides(a_collider, b_collider)};
-								//if (collides) { std::cout << "A collision!!!\n"; }
-								if (collides) { utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b)); }
-				
-								}, b_collider_variant);
-							}, a_collider_variant);
+							}
 						});
 					});
 				}
 		};
 
+	inline void update_colliders_vertex_array(const components::utmg::segment& shape, sf::VertexArray& va, sf::Color c)
+		{
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.a), c}); va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.b), c});
+		}
+	inline void update_colliders_vertex_array(const components::utmg::circle & shape, sf::VertexArray& va, sf::Color c)
+		{
+		shape.center;
+		shape.radius;
+
+		utm::vec2f right{utm::vec2f::right() * shape.radius};
+		utm::vec2f vec{utm::vec2f::right() * shape.radius};
+
+		utils::angle::deg delta_α{1000 / shape.radius};
+
+		using namespace utils::angle::literals;
+		for (utils::angle::deg α = delta_α; α.value < 360; α += delta_α)
+			{
+			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
+			vec = right + α;
+			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
+			}
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(right + shape.center), c});
+		}
+	inline void update_colliders_vertex_array(const components::utmg::polygon& shape, sf::VertexArray& va, sf::Color c)
+		{
+		for (const auto& edge : shape.get_edges())
+			{
+			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.a), c});
+			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.b), c});
+			}
+		}
+	inline void update_colliders_vertex_array(const components::utmg::aabb   & shape, sf::VertexArray& va, sf::Color c)
+		{
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dr), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dr), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
+		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
+		}
+
+	template <components::colliders::is_collider T>
+	inline void update_colliders_vertex_array(iige::Scene& scene, sf::VertexArray& va)
+		{
+		auto colliders_not_colliding{scene.ecs_registry.view<T>(entt::exclude<components::collided_with>)};
+		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>()};
+
+		sf::Color c;
+
+		c = sf::Color::White;
+		colliders_not_colliding.each([&](entt::entity entity, const T& shape)
+			{
+			update_colliders_vertex_array(shape.data, va, c);
+			});
+		c = sf::Color::Red;
+		colliders_____colliding.each([&](entt::entity entity, const T& shape, components::collided_with)
+			{
+			update_colliders_vertex_array(shape.data, va, c);
+			});
+		}
+
+	template <>
+	inline void update_colliders_vertex_array<components::colliders::aabb>(iige::Scene& scene, sf::VertexArray& va)
+		{
+		using T = components::colliders::aabb;
+		auto colliders_not_colliding{scene.ecs_registry.view<T>(entt::exclude<components::collided_with, components::colliders::segment, components::colliders::circle, components::colliders::polygon>)};
+		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>(entt::exclude<components::colliders::segment, components::colliders::circle, components::colliders::polygon>)};
+
+		sf::Color c;
+
+		c = sf::Color::White;
+		colliders_not_colliding.each([&](entt::entity entity, const T& shape)
+			{
+			update_colliders_vertex_array(shape.data, va, c);
+			});
+		c = sf::Color::Red;
+		colliders_____colliding.each([&](entt::entity entity, const T& shape, components::collided_with)
+			{
+			update_colliders_vertex_array(shape.data, va, c);
+			});
+		}
 
 	inline sf::VertexArray& update_colliders_vertex_array(iige::Scene& scene, sf::VertexArray& va)
 		{
 		va.clear();
 
-		auto colliders_not_colliding{scene.ecs_registry.view<components::collider>(entt::exclude<components::collided_with>)};
-		auto colliders_____colliding{scene.ecs_registry.view<components::collider, components::collided_with>()};
-
-		sf::Color c;
-
-		utils::overloaded overloaded
-			{
-			[&](std::monostate&) {},
-			[&](const utm::vec2f& shape) { va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape), c}); va.append({sf::Vector2f{shape.x + 1, shape.y}, c});},
-			[&](const utmg::segment& shape) { va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.a), c}); va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.b), c}); },
-			[&](const utmg::circle& shape)
-				{
-				shape.center;
-				shape.radius;
-
-				utm::vec2f right{utm::vec2f::right() * shape.radius};
-				utm::vec2f vec{utm::vec2f::right() * shape.radius};
-
-				utils::angle::deg delta_α{1000 / shape.radius};
-
-				using namespace utils::angle::literals;
-				for (utils::angle::deg α = delta_α; α.value < 360; α += delta_α)
-					{
-					va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
-					vec = right + α;
-					va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
-					}
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec   + shape.center), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(right + shape.center), c});
-				},
-			[&](const utmg::polygon& shape)
-				{
-				for (const auto& edge : shape.get_edges())
-					{
-					va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.a), c});
-					va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.b), c});
-					}
-				},
-			[&](const utmg::aabb& shape)
-				{
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dr), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dr), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
-				va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
-				}
-			};
-		
-		c = sf::Color::White;
-		colliders_not_colliding.each([&](const components::collider& drawable)
-			{
-			std::visit(overloaded, drawable);
-			});
-		c = sf::Color::Red;
-		colliders_____colliding.each([&](const components::collider& drawable, components::collided_with)
-			{
-			std::visit(overloaded, drawable);
-			});
+		update_colliders_vertex_array<components::colliders::segment>(scene, va);
+		update_colliders_vertex_array<components::colliders::aabb   >(scene, va);
+		update_colliders_vertex_array<components::colliders::circle >(scene, va);
+		update_colliders_vertex_array<components::colliders::polygon>(scene, va);
 
 		return va;
 		}

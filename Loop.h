@@ -63,8 +63,8 @@ namespace iige
 						while (window.poll_event(event)) {}
 
 						ecs::systems::move(scene);
-						(*collision)(scene);
 						ecs::systems::update_colliders_vertex_array(scene, colliders_vertex_array);
+						(*collision)(scene);
 
 						// User/gameplay systems
 						for (const auto& user_system : user_systems)

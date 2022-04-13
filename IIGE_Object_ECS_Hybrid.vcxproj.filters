@@ -71,5 +71,8 @@
     <ClInclude Include="ecs\systems\collision.h">
       <Filter>Header Files\ecs\systems</Filter>
     </ClInclude>
+    <ClInclude Include="ecs\entt.h">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
