@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include <utility>
+#include <mutex>
+#include <execution>
 
 #include <utils/math/geometry/interactions.h>
 #include <utils/definitions.h>
@@ -53,8 +55,42 @@ namespace iige::ecs::systems
 				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::aabb, components::colliders::ptr>()};
 				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::colliders::aabb, components::colliders::ptr>()};
 
+				std::mutex adding_mutex;
 
+				/*std::for_each(std::execution::par, active.begin(), active.end(), [&](const auto entity_a)
+					{
+					const components::colliders::aabb& a_aabb        {active.get<components::colliders::aabb>(entity_a)};
+					components::colliders::ptr         a_collider_ptr{active.get<components::colliders::ptr >(entity_a)};
+					/**/
 				active.each([&](const entt::entity entity_a, const components::colliders::aabb& a_aabb, components::colliders::ptr a_collider_ptr)
+					{
+					targets.each([&](const entt::entity entity_b, const components::colliders::aabb& b_aabb, components::colliders::ptr b_collider_ptr)
+						{
+						if (entity_a == entity_b) { return; }
+
+						if (utmg::collides(a_aabb.data, b_aabb.data))
+							{
+							bool collides{false};
+
+							std::visit([&](const auto& a_collider_ptr)
+								{
+								std::visit([&](const auto& b_collider_ptr)
+									{
+									bool collides{utmg::collides(a_collider_ptr->data, b_collider_ptr->data)};
+									if (collides) 
+										{
+										std::unique_lock lock{adding_mutex};
+										utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b)); 
+										}
+									}, b_collider_ptr);
+								}, a_collider_ptr);
+
+							}
+						});
+					});
+
+
+				/*active.each([&](const entt::entity entity_a, const components::colliders::aabb& a_aabb, components::colliders::ptr a_collider_ptr)
 					{
 					targets.each([&](const entt::entity entity_b, const components::colliders::aabb& b_aabb, components::colliders::ptr b_collider_ptr)
 						{
@@ -76,7 +112,7 @@ namespace iige::ecs::systems
 
 							}
 						});
-					});
+					});*/
 				}
 		};
 

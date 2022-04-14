@@ -1,5 +1,7 @@
 #pragma once
 
+#include <execution>
+
 #include <utils/math/geometry/transformations.h>
 
 #include "../entt.h"
@@ -42,15 +44,42 @@ namespace iige::ecs::systems
 		}
 
 
-	inline void move(iige::Scene& scene)
+	inline void move(iige::Scene& scene, float delta_time)
 		{
 		auto movement_view{scene.ecs_registry.view<components::transform, components::speed, components::transform_next, components::transform_prev>()};
 
-		movement_view.each([](utils::math::Transform2& transform, const utils::math::Transform2& speed, utils::math::Transform2& transform_next, utils::math::Transform2& transform_prev)
+		/*std::for_each(std::execution::par, movement_view.begin(), movement_view.end(), [&](const auto entity)
 			{
+			      utils::math::Transform2& transform     {movement_view.get<components::transform     >(entity)};
+			const utils::math::Transform2& speed         {movement_view.get<components::speed         >(entity)};
+			      utils::math::Transform2& transform_next{movement_view.get<components::transform_next>(entity)};
+			      utils::math::Transform2& transform_prev{movement_view.get<components::transform_prev>(entity)};
+			/**/
+
+		utils::math::Transform2 s{};
+		utils::math::Transform2 t{};
+		utils::math::Transform2 tn{};
+		utils::math::Transform2 tp{};
+		utils::math::Transform2 t2{};
+		utils::math::Transform2 tn2{};
+		utils::math::Transform2 tp2{};
+
+
+		movement_view.each([&](utils::math::Transform2& transform, const utils::math::Transform2& speed, utils::math::Transform2& transform_next, utils::math::Transform2& transform_prev)
+			{
+			s = speed;
+			t = transform;
+			tp = transform_prev;
+			tn = transform_next;
+
+
 			transform      = transform_next;
 			transform_prev = transform;
-			transform_next += speed;
+			transform_next += speed * delta_time;
+
+			t2 = transform;
+			tp2 = transform_prev;
+			tn2 = transform_next;
 			});
 
 
@@ -64,9 +93,16 @@ namespace iige::ecs::systems
 		{
 		auto movement_view{scene.ecs_registry.view<components::transform, components::transform_next, components::transform_prev>()};
 
+		/*std::for_each(std::execution::par, movement_view.begin(), movement_view.end(), [&movement_view, &interpolation](const auto entity)
+			{
+			      utils::math::Transform2& transform     {movement_view.get<components::transform     >(entity)};
+			const utils::math::Transform2& transform_next{movement_view.get<components::transform_next>(entity)};
+			const utils::math::Transform2& transform_prev{movement_view.get<components::transform_prev>(entity)};
+			/**/
 		movement_view.each([interpolation](utils::math::Transform2& transform, const utils::math::Transform2& transform_next, const utils::math::Transform2& transform_prev)
 			{
-			transform = { utils::math::Transform2::lerp(transform_prev, transform_next, interpolation) };
+			
+			transform = {utils::math::Transform2::lerp(transform_prev, transform_next, interpolation)};
 			});
 		}
 	}

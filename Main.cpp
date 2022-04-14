@@ -75,11 +75,11 @@ int main()
 	
 	iige::ecs::systems::collision_impl<2> collision;
 	
-	iige::Loop loop{scene, window, collision, 10.f};
+	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 60.f};
 
 
 	//Bouncing system
-	loop.user_systems.emplace_back([&](iige::Scene& scene, iige::Window& window)
+	loop.step_systems.emplace_back([&](iige::Scene& scene, iige::Window& window, float)
 		{
 		auto view{scene.ecs_registry.view<iige::ecs::components::transform, iige::ecs::components::speed>()};
 
