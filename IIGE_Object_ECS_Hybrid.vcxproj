@@ -170,6 +170,7 @@
     <ClInclude Include="ecs\components\collision.h" />
     <ClInclude Include="ecs\components\spatial.h" />
     <ClInclude Include="ecs\entt.h" />
+    <ClInclude Include="ecs\exceptions.h" />
     <ClInclude Include="ecs\systems\collision.h" />
     <ClInclude Include="ecs\systems\draw.h" />
     <ClInclude Include="ecs\systems\move.h" />

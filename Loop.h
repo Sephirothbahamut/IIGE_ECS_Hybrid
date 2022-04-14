@@ -18,29 +18,59 @@ namespace iige
 	class Loop
 		{
 		private:
-			static constexpr bool log_enabled = true;
-
 			utils::observer_ptr<Scene> scene {nullptr};
 			utils::observer_ptr<Window> window{nullptr};
 			utils::observer_ptr<ecs::systems::collision> collision{nullptr};
+			sf::VertexArray colliders_vertex_array{sf::PrimitiveType::Lines};
 
 			const float steps_per_second = 1.f;
 			const sf::Time fixed_delta_time{sf::seconds(1.f / steps_per_second)};
 			const size_t max_frameskip = 5;
 
+			void step()
+				{
+				Scene& scene = *this->scene;
+				Window& window = *this->window;
+
+				sf::Event event;
+				while (window.poll_event(event)) {}
+
+				ecs::systems::move(scene);
+				(*collision)(scene);
+				ecs::systems::update_colliders_vertex_array(scene, colliders_vertex_array);
+
+				// User/gameplay systems
+				for (const auto& user_system : user_systems)
+					{
+					user_system(scene, window);
+					}
+				}
+			void draw(float interpolation)
+				{
+				Scene& scene = *this->scene;
+				Window& window = *this->window;
+
+				window.sf_window.clear();
+				ecs::systems::interpolate(scene, interpolation);
+				ecs::systems::draw(scene, window.sf_window);
+				window.sf_window.draw(colliders_vertex_array);
+				window.sf_window.display();
+				}
+
 		public:
-			Loop(Scene& scene, Window& window, ecs::systems::collision& collision, float steps_per_second = 1.f) noexcept : scene{&scene}, window{&window}, collision{&collision}, steps_per_second{steps_per_second}
+			Loop(Scene& scene, Window& window, ecs::systems::collision& collision, float steps_per_second = 1.f, size_t max_frameskip = 5) noexcept : 
+				scene{&scene}, window{&window}, collision{&collision}, 
+				steps_per_second{steps_per_second}, fixed_delta_time{sf::seconds(1.f / steps_per_second)}, max_frameskip{max_frameskip}
 				{}
 
 			std::vector<std::function<void(Scene&, Window&)>> user_systems;
+
 
 			void run()
 				{
 				// https://dewitters.com/dewitters-gameloop/
 				Scene& scene  = *this->scene;
 				Window&  window = *this->window;
-
-				sf::VertexArray colliders_vertex_array{sf::PrimitiveType::Lines};
 
 				sf::Clock clock;
 				sf::Time next_step_time = clock.getElapsedTime();
@@ -59,31 +89,16 @@ namespace iige
 						}
 					while (clock.getElapsedTime() > next_step_time && step_loops < max_frameskip)
 						{
-						sf::Event event;
-						while (window.poll_event(event)) {}
-
-						ecs::systems::move(scene);
-						ecs::systems::update_colliders_vertex_array(scene, colliders_vertex_array);
-						(*collision)(scene);
-
-						// User/gameplay systems
-						for (const auto& user_system : user_systems)
-							{
-							user_system(scene, window);
-							}
-
-
+						step();
+						step_loops++;
 						next_step_time += fixed_delta_time;
 						}
+					step_loops = 0;
 
 					interpolation = (clock.getElapsedTime() + fixed_delta_time - next_step_time) / fixed_delta_time;
 
 					frames_counter++;
-					window.sf_window.clear();
-					ecs::systems::interpolate(scene, interpolation);
-					ecs::systems::draw(scene, window.sf_window);
-					window.sf_window.draw(colliders_vertex_array);
-					window.sf_window.display();
+					draw(interpolation);
 					}
 				}
 		};

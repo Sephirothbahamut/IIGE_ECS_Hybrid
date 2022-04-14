@@ -9,13 +9,5 @@ namespace iige::ecs::components
 		utils::discard(registry.get_or_emplace<transform_next>(entity, current_transform));
 		utils::discard(registry.get_or_emplace<transform_prev>(entity, current_transform));
 		utils::discard(registry.get_or_emplace<components::speed>(entity, speed));
-
-		/*components::collider* collider{registry.try_get<components::collider>(entity)};
-		if (collider)
-			{
-			utils::discard(registry.get_or_emplace<components::collider_source>(entity, *collider));
-
-			(*collider) &= transform;
-			}TODO*/
 		}
 	}

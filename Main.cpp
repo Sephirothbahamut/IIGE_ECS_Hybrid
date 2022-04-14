@@ -23,17 +23,15 @@ int main()
 	
 	utils::math::Transform2 t{.position{200.f, 150.f}, .orientation{}};
 
-
 	std::random_device rd;
 	std::mt19937 mt{static_cast<long unsigned int>(0)};
-	std::uniform_int_distribution<int> distribution{0, 5};
+	std::uniform_int_distribution<int> distribution{0, 4};
 	std::uniform_real_distribution<float> x_distribution{0, 1024};
 	std::uniform_real_distribution<float> y_distribution{0,  768};
 	std::uniform_real_distribution<float> angle_distribution{0, 360};
 	std::uniform_real_distribution<float> rotation_distribution{-10, 10};
 	std::uniform_real_distribution<float> speed_distribution{-10, 10};
 	
-
 	for (size_t i = 0; i < 800; i++)
 		{
 		auto entity{scene.ecs_registry.create()};
@@ -43,25 +41,25 @@ int main()
 		utils::math::vec2f speed   {speed_distribution (mt), speed_distribution (mt)};
 		utils::angle::deg  rotation{rotation_distribution(mt)};
 
-		iige::ecs::components::add_movement (scene.ecs_registry, entity, {position, angle}, {speed, rotation});
+		iige::ecs::components::add_movement(scene.ecs_registry, entity, {position, angle}, {speed, rotation});
 
 		int collider_type{distribution(mt)};
 		switch (collider_type)
 			{
 			case 0:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon       >(scene.ecs_registry, entity, iige::ecs::components::utmg::polygon{{-10, -10}, {-5, 0}, { 10, -10 }, {10, 10}, {0, 0}, {-10, 10}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon>(scene.ecs_registry, entity, iige::ecs::components::utmg::polygon{{-10, -10}, {-5, 0}, { 10, -10 }, {10, 10}, {0, 0}, {-10, 10}});
 				break;
 			case 1:
 				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon>(scene.ecs_registry, entity, iige::ecs::components::utmg::convex_polygon{{0, 0}, {100, 50}, {50, 100}});
 				break;
 			case 2:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::circle        >(scene.ecs_registry, entity, iige::ecs::components::utmg::circle{{0, 0}, 32});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::circle >(scene.ecs_registry, entity, iige::ecs::components::utmg::circle{{0, 0}, 32});
 				break;
 			case 3:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::aabb          >(scene.ecs_registry, entity, iige::ecs::components::utmg::aabb{.ll{-10}, .up{-10}, .rr{10}, .dw{10}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::aabb   >(scene.ecs_registry, entity, iige::ecs::components::utmg::aabb{.ll{-10}, .up{-10}, .rr{10}, .dw{10}});
 				break;
 			case 4:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::segment       >(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{-10, 10}, {10, -10}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::segment >(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{-10, 10}, {10, -10}});
 				break;
 			case 5:
 				//iige::ecs::components::add_collision(scene.ecs_registry, entity, iige::ecs::components::collider{utils::math::vec2f{0, 0}});
