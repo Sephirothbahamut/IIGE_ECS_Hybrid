@@ -21,7 +21,7 @@ int main()
 	
 	iige::Scene scene;
 	
-	utils::math::Transform2 t{.position{200.f, 150.f}, .orientation{}};
+	utils::math::transform2 t{.position{200.f, 150.f}, .orientation{}};
 
 	std::random_device rd;
 	std::mt19937 mt{static_cast<long unsigned int>(0)};

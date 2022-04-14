@@ -1,10 +1,4 @@
- 16499397167438251 [LOG] FPS: 2598.532227 with #1 active objects.
+ 16499558799111586 [LOG] FPS: 0.228513 with #800 active objects.
 
- 16499397177441849 [LOG] FPS: 3466.689453 with #1 active objects.
-
- 16499397187443671 [LOG] FPS: 3487.260742 with #1 active objects.
-
- 16499397197444521 [LOG] FPS: 3249.726807 with #1 active objects.
-
- 16499397207446098 [LOG] FPS: 2761.560791 with #1 active objects.
+ 16499558842316032 [LOG] FPS: 0.231455 with #800 active objects.
 

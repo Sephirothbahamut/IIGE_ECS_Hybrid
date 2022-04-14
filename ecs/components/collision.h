@@ -6,7 +6,7 @@
 #include <utils/compilation/debug.h>
 #include <utils/concepts.h>
 #include <utils/math/vec2.h>
-#include <utils/math/Transform2.h>
+#include <utils/math/transform2.h>
 #include <utils/math/geometry/aabb.h>
 #include <utils/math/geometry/circle.h>
 #include <utils/math/geometry/polygon.h>
@@ -23,7 +23,7 @@
 
 namespace iige::ecs::components
 	{
-	using transform = ::utils::math::Transform2;
+	using transform = ::utils::math::transform2;
 
 	namespace
 		{
@@ -74,7 +74,7 @@ namespace iige::ecs::components
 		/// <summary> The point along other's edge that was impacted. </summary>
 		utm::vec2f impact_point;
 		/// <summary> The transform at which this entity impacts other. </summary>
-		utm::Transform2 impact_transform;
+		utm::transform2 impact_transform;
 		/// <summary> The normal at the impact point. </summary>
 		utm::vec2f normal;
 		float time{0};

@@ -118,12 +118,12 @@
 //	
 //	poly_convex src_poly{{0, 0}, {100, 50}, {50, 100}};
 //
-//	utm::Transform2	tr_segment{{200, 300},  58_deg, 1.f};
-//	utm::Transform2	tr_point{{100, 400},  24_deg, 1.f};
-//	utm::Transform2	tr_poly{{250, 300}, /*105_deg*/0_deg, 1.f};
-//	utm::Transform2	tr_cttv{{250, 300}, 105_deg, 1.f};
-//	utm::Transform2	tr_circle{{350, 400},  75_deg, 1.f};
-//	utm::Transform2	tr_aabb{{350, 400},  75_deg, 1.f};
+//	utm::transform2	tr_segment{{200, 300},  58_deg, 1.f};
+//	utm::transform2	tr_point{{100, 400},  24_deg, 1.f};
+//	utm::transform2	tr_poly{{250, 300}, /*105_deg*/0_deg, 1.f};
+//	utm::transform2	tr_cttv{{250, 300}, 105_deg, 1.f};
+//	utm::transform2	tr_circle{{350, 400},  75_deg, 1.f};
+//	utm::transform2	tr_aabb{{350, 400},  75_deg, 1.f};
 //
 //	utmg::segment segment{src_segment * tr_segment};
 //	utm::vec2f   point{src_point * tr_point};
@@ -132,7 +132,7 @@
 //	utmg::circle  circle{src_circle * tr_circle};
 //	utmg::aabb    aabb{src_aabb * tr_aabb};
 //
-//	utils::observer_ptr<utm::Transform2> selected_transform{nullptr};
+//	utils::observer_ptr<utm::transform2> selected_transform{nullptr};
 //
 //
 //	auto side{segment.point_side(point)};
