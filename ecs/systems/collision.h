@@ -203,8 +203,8 @@ namespace iige::ecs::systems
 	inline void update_colliders_vertex_array<components::colliders::aabb>(iige::Scene& scene, sf::VertexArray& va)
 		{
 		using T = components::colliders::aabb;
-		auto colliders_not_colliding{scene.ecs_registry.view<T>(entt::exclude<components::collided_with, components::colliders::segment, components::colliders::circle, components::colliders::polygon, components::colliders::continuous_point>)};
-		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>(entt::exclude<components::colliders::segment, components::colliders::circle, components::colliders::polygon, components::colliders::continuous_point>)};
+		auto colliders_not_colliding{scene.ecs_registry.view<T>(entt::exclude<components::collided_with, components::colliders::segment, components::colliders::circle, components::colliders::polygon, components::colliders::convex_polygon, components::colliders::continuous_point>)};
+		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>(entt::exclude<components::colliders::segment, components::colliders::circle, components::colliders::polygon, components::colliders::convex_polygon, components::colliders::continuous_point>)};
 
 		sf::Color c;
 

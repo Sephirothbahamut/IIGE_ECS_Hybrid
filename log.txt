@@ -1,4 +1,0 @@
- 16500541013940898 [LOG] FPS: 0.382543 with #800 active objects.
-
- 16500541039608712 [LOG] FPS: 0.389586 with #800 active objects.
-
