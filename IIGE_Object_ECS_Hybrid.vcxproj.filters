@@ -77,5 +77,8 @@
     <ClInclude Include="ecs\exceptions.h">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="ecs\components\component.h">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

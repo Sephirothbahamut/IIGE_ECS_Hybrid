@@ -19,15 +19,35 @@ namespace iige::ecs::systems
 	template <components::colliders::is_collider collider_t>
 	void move_colliders(iige::Scene& scene)
 		{
-		auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::source<collider_t>, collider_t, components::colliders::aabb>()};
-
-		using namespace utils::math::geometry::transformations;
-		moving_colliders_view.each([](const components::transform& transform, const components::colliders::source<collider_t>& collider_source, collider_t& collider, components::colliders::aabb& aabb)
+		if constexpr (components::colliders::is_discrete_collider<collider_t>)
 			{
-			using namespace iige::ecs::components;//TODO check if necessary
-			collider.data = collider_source.data * transform;
-			aabb.data = static_cast<components::utmg::aabb>(collider.data);
-			});
+			auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::source<collider_t>, collider_t, components::colliders::aabb>()};
+
+			using namespace utils::math::geometry::transformations;
+			moving_colliders_view.each([](const components::transform& transform, const components::colliders::source<collider_t>& collider_source, collider_t& collider, components::colliders::aabb& aabb)
+				{
+				using namespace iige::ecs::components;//TODO check if necessary
+				collider.value() = collider_source.value() * transform;
+				aabb.value() = static_cast<components::utmg::aabb>(collider.value());
+				});
+			}
+		else if constexpr (components::colliders::is_continuous_collider<collider_t>)
+			{
+			auto moving_colliders_view{scene.ecs_registry.view<components::transform_prev, components::transform_next, components::colliders::source<collider_t::discrete>, collider_t, components::colliders::aabb>()};
+
+			using namespace utils::math::geometry::transformations;
+			moving_colliders_view.each([]
+					(
+					const components::transform_prev& transform_prev, const components::transform_next& transform_next, 
+					const components::colliders::source<collider_t::discrete>& collider_source, collider_t& collider, components::colliders::aabb& aabb
+					)
+				{
+				using namespace iige::ecs::components;//TODO check if necessary
+				collider.value() = collider_t{collider_source.value() * transform_prev, collider_source.value() * transform_next};
+				aabb.value() = static_cast<components::utmg::aabb>(collider.value());
+				});
+			}
+
 		}
 
 	template <>
@@ -39,35 +59,9 @@ namespace iige::ecs::systems
 		moving_colliders_view.each([](const components::transform& transform, const components::colliders::source<components::colliders::aabb>& collider_source, components::colliders::aabb& collider)
 			{
 			using namespace iige::ecs::components;
-			collider.data = collider_source.data * transform;
+			collider.value() = collider_source.value() * transform;
 			});
 		}
-
-	template <>
-	void move_colliders<components::colliders::continuous_point>(iige::Scene& scene)
-		{
-		auto moving_colliders_view
-			{
-			scene.ecs_registry.view<components::transform, components::transform_next, components::colliders::source<components::colliders::continuous_point>,
-			components::colliders::continuous_point, components::colliders::aabb>()
-			};
-
-		using namespace utils::math::geometry::transformations;
-		moving_colliders_view.each([]
-				(
-				const components::transform& transform, const components::transform_next& transform_next,
-				const components::colliders::source<components::colliders::continuous_point>& collider_source, components::colliders::continuous_point& collider,
-				components::colliders::aabb& aabb
-				)
-			{
-			using namespace iige::ecs::components;
-			collider.data.a = collider_source.data.a * transform;
-			collider.data.b = collider_source.data.a * transform_next;
-
-			aabb.data = static_cast<components::utmg::aabb>(collider.data);
-			});
-		}
-
 
 	inline void move(iige::Scene& scene, float delta_time)
 		{
@@ -94,6 +88,7 @@ namespace iige::ecs::systems
 		move_colliders<components::colliders::aabb            >(scene);
 		move_colliders<components::colliders::circle          >(scene);
 		move_colliders<components::colliders::polygon         >(scene);
+		move_colliders<components::colliders::convex_polygon  >(scene);
 		move_colliders<components::colliders::continuous_point>(scene);
 		}
 

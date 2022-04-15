@@ -68,8 +68,6 @@ namespace iige::ecs::systems
 				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::aabb, components::colliders::ptr>()};
 				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::colliders::aabb, components::colliders::ptr>()};
 
-				
-
 				/*
 				std::mutex adding_mutex;
 				std::for_each(std::execution::par, active.begin(), active.end(), [&](const auto entity_a)
@@ -83,7 +81,7 @@ namespace iige::ecs::systems
 						{
 						if (entity_a == entity_b) { return; }
 
-						if (utmg::collides(a_aabb.data, b_aabb.data))
+						if (utmg::collides(a_aabb.value(), b_aabb.value()))
 							{
 							bool collides{false};
 
@@ -91,22 +89,26 @@ namespace iige::ecs::systems
 								{
 								std::visit([&](const auto& b_collider_ptr)
 									{
-									if constexpr (!std::is_same_v<decltype(a_collider_ptr), const components::colliders::continuous_point*>)
+									using a_collider_type = std::remove_reference<decltype(*a_collider_ptr)>::type;
+									using b_collider_type = std::remove_reference<decltype(*b_collider_ptr)>::type;
+
+									if constexpr (components::colliders::is_discrete_collider<a_collider_type>)
 										{
-										bool collides{utmg::collides(a_collider_ptr->data, b_collider_ptr->data)};
+										bool collides{utmg::collides(a_collider_ptr->value(), b_collider_ptr->value())};
 										if (collides)
 											{
 											//std::unique_lock lock{adding_mutex};
 											utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b));
 											}
 										}
-									else
+									else if constexpr (components::colliders::is_continuous_collider<a_collider_type>)
 										{
-										auto result{utils::math::geometry::continuous_collides(a_collider_ptr->data, b_collider_ptr->data)};
+										auto result{utils::math::geometry::continuous_collides(a_collider_ptr->value(), b_collider_ptr->value())};
 										if (result)
 											{
+											//std::unique_lock lock{adding_mutex};
 											utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b));
-											utils::discard(scene.ecs_registry.get_or_emplace<utils::math::geometry::collision_data>(result.value()));
+											utils::discard(scene.ecs_registry.get_or_emplace<components::collision_data>(entity_a, result.value()));
 											}
 										}
 									}, b_collider_ptr);
@@ -130,10 +132,10 @@ namespace iige::ecs::systems
 		utm::vec2f right{utm::vec2f::right() * shape.radius};
 		utm::vec2f vec{utm::vec2f::right() * shape.radius};
 
-		utils::angle::deg delta_α{1000 / shape.radius};
+		utils::math::angle::deg delta_α{1000 / shape.radius};
 
-		using namespace utils::angle::literals;
-		for (utils::angle::deg α = delta_α; α.value < 360; α += delta_α)
+		using namespace utils::math::angle::literals;
+		for (utils::math::angle::deg α = delta_α; α.value < 360; α += delta_α)
 			{
 			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
 			vec = right + α;
@@ -188,12 +190,12 @@ namespace iige::ecs::systems
 		c = sf::Color::White;
 		colliders_not_colliding.each([&](entt::entity entity, const T& shape)
 			{
-			update_colliders_vertex_array(shape.data, va, c);
+			update_colliders_vertex_array(shape.value(), va, c);
 			});
 		c = sf::Color::Red;
 		colliders_____colliding.each([&](entt::entity entity, const T& shape, components::collided_with)
 			{
-			update_colliders_vertex_array(shape.data, va, c);
+			update_colliders_vertex_array(shape.value(), va, c);
 			});
 		}
 
@@ -209,12 +211,12 @@ namespace iige::ecs::systems
 		c = sf::Color::White;
 		colliders_not_colliding.each([&](entt::entity entity, const T& shape)
 			{
-			update_colliders_vertex_array(shape.data, va, c);
+			update_colliders_vertex_array(shape.value(), va, c);
 			});
 		c = sf::Color::Red;
 		colliders_____colliding.each([&](entt::entity entity, const T& shape, components::collided_with)
 			{
-			update_colliders_vertex_array(shape.data, va, c);
+			update_colliders_vertex_array(shape.value(), va, c);
 			});
 		}
 
@@ -227,6 +229,7 @@ namespace iige::ecs::systems
 		update_colliders_vertex_array<components::colliders::aabb            >(scene, va);
 		update_colliders_vertex_array<components::colliders::circle          >(scene, va);
 		update_colliders_vertex_array<components::colliders::polygon         >(scene, va);
+		update_colliders_vertex_array<components::colliders::convex_polygon  >(scene, va);
 		update_colliders_vertex_array<components::colliders::continuous_point>(scene, va);
 
 		return va;

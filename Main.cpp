@@ -15,7 +15,7 @@
 
 int main()
 	{
-	using namespace utils::angle::literals;
+	using namespace utils::math::angle::literals;
 	
 	iige::Window window{iige::Window::create_info{.size{1024, 768}, .position{10, 10}, .title{"My window"}}};
 	
@@ -31,15 +31,15 @@ int main()
 	std::uniform_real_distribution<float> angle_distribution   {  0,  360};
 	std::uniform_real_distribution<float> rotation_distribution{-10,   10};
 	std::uniform_real_distribution<float> speed_distribution   {-100,   100};
-	
+
 	for (size_t i = 0; i < 800; i++)
 		{
 		auto entity{scene.ecs_registry.create()};
 
 		utils::math::vec2f position{x_distribution(mt), y_distribution(mt)};
-		utils::angle::deg  angle   {angle_distribution(mt)};
+		utils::math::angle::deg  angle   {angle_distribution(mt)};
 		utils::math::vec2f speed   {speed_distribution(mt), speed_distribution (mt)};
-		utils::angle::deg  rotation{rotation_distribution(mt)};
+		utils::math::angle::deg  rotation{rotation_distribution(mt)};
 
 		iige::ecs::components::add_movement(scene.ecs_registry, entity, {position, angle}, {speed, rotation, 0});
 
@@ -50,7 +50,7 @@ int main()
 				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon         >(scene.ecs_registry, entity, iige::ecs::components::utmg::polygon{{-10, -10}, {-5, 0}, { 10, -10 }, {10, 10}, {0, 0}, {-10, 10}});
 				break;
 			case 1:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon         >(scene.ecs_registry, entity, iige::ecs::components::utmg::convex_polygon{{0, 0}, {100, 50}, {50, 100}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::convex_polygon  >(scene.ecs_registry, entity, std::vector<utils::math::vec2f>{{0, 0}, {100, 50}, {50, 100}});
 				break;
 			case 2:
 				iige::ecs::components::add_collision<iige::ecs::components::colliders::circle          >(scene.ecs_registry, entity, iige::ecs::components::utmg::circle{{0, 0}, 32});
@@ -65,7 +65,7 @@ int main()
 				iige::ecs::components::add_collision<iige::ecs::components::colliders::point           >(scene.ecs_registry, entity, iige::ecs::components::utmg::point{0, 0});
 				break;
 			case 6:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{0, 0}, {0, 0}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::ecs::components::utmg::point{0, 0});
 				{
 				auto& speed{scene.ecs_registry.get<iige::ecs::components::speed>(entity)};
 				speed.position.x *= 10;

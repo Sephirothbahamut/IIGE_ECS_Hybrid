@@ -101,7 +101,7 @@
 //	{
 //	if (!font.loadFromFile("data/fonts/consola.ttf")) { return 0; }
 //
-//	using namespace utils::angle::literals;
+//	using namespace utils::math::angle::literals;
 //	using namespace utils::math::geometry::transformations;
 //	using poly_convex = utmg::convex_polygon;
 //	using poly_gon = utmg::polygon;
