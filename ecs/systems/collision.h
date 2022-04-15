@@ -5,6 +5,7 @@
 #include <execution>
 
 #include <utils/math/geometry/interactions.h>
+#include <utils/math/geometry/continuous_interactions.h>
 #include <utils/definitions.h>
 #include <utils/variant.h>
 #include <utils/math/angle.h>
@@ -38,26 +39,40 @@ namespace iige::ecs::systems
 		public:
 			virtual void operator()(iige::Scene& scene) const noexcept final override
 				{
-				auto collided{scene.ecs_registry.view<components::collided_with>()};
-				collided.each([&](const entt::entity entity, const components::collided_with&)
+				if (true)
 					{
-					scene.ecs_registry.remove<components::collided_with>(entity);
-					});
+					auto collided{scene.ecs_registry.view<components::collided_with>()};
+					collided.each([&](const entt::entity entity, const components::collided_with&)
+						{
+						scene.ecs_registry.remove<components::collided_with>(entity);
+						});
+					}
+				if (true)
+					{
+					auto collided{scene.ecs_registry.view<utils::math::geometry::collision_data>()};
+					collided.each([&](const entt::entity entity, const utils::math::geometry::collision_data&)
+						{
+						scene.ecs_registry.remove<utils::math::geometry::collision_data>(entity);
+						});
+					}
 
 				[&] <std::size_t... I>(std::index_sequence<I...>) {
 					(evaluate<I>(scene), ...);
 					}(std::make_index_sequence<layers_count>{});
 				}
 		private:
+#pragma optimize("", off)
 			template<size_t layer>
 			void evaluate(iige::Scene& scene) const noexcept
 				{
 				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::aabb, components::colliders::ptr>()};
 				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::colliders::aabb, components::colliders::ptr>()};
 
-				std::mutex adding_mutex;
+				
 
-				/*std::for_each(std::execution::par, active.begin(), active.end(), [&](const auto entity_a)
+				/*
+				std::mutex adding_mutex;
+				std::for_each(std::execution::par, active.begin(), active.end(), [&](const auto entity_a)
 					{
 					const components::colliders::aabb& a_aabb        {active.get<components::colliders::aabb>(entity_a)};
 					components::colliders::ptr         a_collider_ptr{active.get<components::colliders::ptr >(entity_a)};
@@ -76,51 +91,38 @@ namespace iige::ecs::systems
 								{
 								std::visit([&](const auto& b_collider_ptr)
 									{
-									bool collides{utmg::collides(a_collider_ptr->data, b_collider_ptr->data)};
-									if (collides) 
+									if constexpr (!std::is_same_v<decltype(a_collider_ptr), const components::colliders::continuous_point*>)
 										{
-										std::unique_lock lock{adding_mutex};
-										utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b)); 
+										bool collides{utmg::collides(a_collider_ptr->data, b_collider_ptr->data)};
+										if (collides)
+											{
+											//std::unique_lock lock{adding_mutex};
+											utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b));
+											}
+										}
+									else
+										{
+										auto result{utils::math::geometry::continuous_collides(a_collider_ptr->data, b_collider_ptr->data)};
+										if (result)
+											{
+											utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b));
+											utils::discard(scene.ecs_registry.get_or_emplace<utils::math::geometry::collision_data>(result.value()));
+											}
 										}
 									}, b_collider_ptr);
 								}, a_collider_ptr);
-
 							}
 						});
 					});
-
-
-				/*active.each([&](const entt::entity entity_a, const components::colliders::aabb& a_aabb, components::colliders::ptr a_collider_ptr)
-					{
-					targets.each([&](const entt::entity entity_b, const components::colliders::aabb& b_aabb, components::colliders::ptr b_collider_ptr)
-						{
-						if (entity_a == entity_b) { return; }
-
-						if (utmg::collides(a_aabb.data, b_aabb.data))
-							{
-							bool collides{false};
-
-
-							std::visit([&](const auto& a_collider_ptr)
-								{
-								std::visit([&](const auto& b_collider_ptr)
-									{
-									bool collides{utmg::collides(a_collider_ptr->data, b_collider_ptr->data)};
-									if (collides) { utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b)); }
-									}, b_collider_ptr);
-								}, a_collider_ptr);
-
-							}
-						});
-					});*/
 				}
+#pragma optimize("", on)
 		};
 
-	inline void update_colliders_vertex_array(const components::utmg::segment& shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const components::utmg::segment         & shape, sf::VertexArray& va, sf::Color c)
 		{
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.a), c}); va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.b), c});
 		}
-	inline void update_colliders_vertex_array(const components::utmg::circle & shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const components::utmg::circle          & shape, sf::VertexArray& va, sf::Color c)
 		{
 		shape.center;
 		shape.radius;
@@ -140,7 +142,7 @@ namespace iige::ecs::systems
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(right + shape.center), c});
 		}
-	inline void update_colliders_vertex_array(const components::utmg::polygon& shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const components::utmg::polygon         & shape, sf::VertexArray& va, sf::Color c)
 		{
 		for (const auto& edge : shape.get_edges())
 			{
@@ -148,7 +150,7 @@ namespace iige::ecs::systems
 			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.b), c});
 			}
 		}
-	inline void update_colliders_vertex_array(const components::utmg::aabb   & shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const components::utmg::aabb            & shape, sf::VertexArray& va, sf::Color c)
 		{
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
@@ -158,6 +160,21 @@ namespace iige::ecs::systems
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
+		}
+	inline void update_colliders_vertex_array(const components::utmg::point           & shape, sf::VertexArray& va, sf::Color c)
+			{
+			components::utmg::aabb aabb{.ll{shape.x - 1}, .up{shape.y - 1}, .rr{shape.x + 1}, .dw{shape.y + 1}};
+			update_colliders_vertex_array(aabb, va, c);
+			}
+	inline void update_colliders_vertex_array(const components::utmg::continuous_point& shape, sf::VertexArray& va, sf::Color c)
+		{
+		update_colliders_vertex_array(shape.a, va, c);
+		update_colliders_vertex_array(static_cast<components::utmg::segment>(shape), va, c);
+
+		components::utm::vec2f arrow_hand_ll{shape.b + (shape.perpendicular_left () * 4.f) - (shape.forward() * 4.f)};
+		components::utm::vec2f arrow_hand_rr{shape.b + (shape.perpendicular_right() * 4.f) - (shape.forward() * 4.f)};
+		update_colliders_vertex_array(components::utmg::segment{shape.b, arrow_hand_ll}, va, c);
+		update_colliders_vertex_array(components::utmg::segment{shape.b, arrow_hand_rr}, va, c);
 		}
 
 	template <components::colliders::is_collider T>
@@ -184,8 +201,8 @@ namespace iige::ecs::systems
 	inline void update_colliders_vertex_array<components::colliders::aabb>(iige::Scene& scene, sf::VertexArray& va)
 		{
 		using T = components::colliders::aabb;
-		auto colliders_not_colliding{scene.ecs_registry.view<T>(entt::exclude<components::collided_with, components::colliders::segment, components::colliders::circle, components::colliders::polygon>)};
-		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>(entt::exclude<components::colliders::segment, components::colliders::circle, components::colliders::polygon>)};
+		auto colliders_not_colliding{scene.ecs_registry.view<T>(entt::exclude<components::collided_with, components::colliders::segment, components::colliders::circle, components::colliders::polygon, components::colliders::continuous_point>)};
+		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>(entt::exclude<components::colliders::segment, components::colliders::circle, components::colliders::polygon, components::colliders::continuous_point>)};
 
 		sf::Color c;
 
@@ -205,10 +222,12 @@ namespace iige::ecs::systems
 		{
 		va.clear();
 
-		update_colliders_vertex_array<components::colliders::segment>(scene, va);
-		update_colliders_vertex_array<components::colliders::aabb   >(scene, va);
-		update_colliders_vertex_array<components::colliders::circle >(scene, va);
-		update_colliders_vertex_array<components::colliders::polygon>(scene, va);
+		update_colliders_vertex_array<components::colliders::point           >(scene, va);
+		update_colliders_vertex_array<components::colliders::segment         >(scene, va);
+		update_colliders_vertex_array<components::colliders::aabb            >(scene, va);
+		update_colliders_vertex_array<components::colliders::circle          >(scene, va);
+		update_colliders_vertex_array<components::colliders::polygon         >(scene, va);
+		update_colliders_vertex_array<components::colliders::continuous_point>(scene, va);
 
 		return va;
 		}

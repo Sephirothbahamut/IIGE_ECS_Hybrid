@@ -28,5 +28,5 @@ namespace iige::ecs::components
 		speed         & operator=(const transform& copy) noexcept { transform::operator= (copy); return *this; }
 		};
 
-	void add_movement(entt::registry& registry, entt::entity entity, components::transform transform = {}, components::transform speed = {});
+	void add_movement(entt::registry& registry, entt::entity entity, components::transform transform = {}, components::transform speed = {{0, 0}, 0, 0});
 	}

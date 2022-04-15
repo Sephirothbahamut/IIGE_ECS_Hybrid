@@ -39,9 +39,9 @@ namespace iige
 						(*collision)(scene);
 						ecs::systems::update_colliders_vertex_array(scene, colliders_vertex_array);
 
-						for (const auto& user_system : step_systems)
+						for (const auto& step_system : step_systems)
 							{
-							user_system(scene, window, delta_time);
+							step_system(scene, window, delta_time);
 							}
 						}
 					void draw(float delta_time, float interpolation)
@@ -172,6 +172,7 @@ namespace iige
 						}
 					}
 			};
+		
 		class variable_fps_and_game_speed : public details::base_loop
 			{
 			private:

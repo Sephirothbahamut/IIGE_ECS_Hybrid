@@ -25,12 +25,12 @@ int main()
 
 	std::random_device rd;
 	std::mt19937 mt{static_cast<long unsigned int>(0)};
-	std::uniform_int_distribution<int> distribution{0, 4};
-	std::uniform_real_distribution<float> x_distribution{0, 1024};
-	std::uniform_real_distribution<float> y_distribution{0,  768};
-	std::uniform_real_distribution<float> angle_distribution{0, 360};
-	std::uniform_real_distribution<float> rotation_distribution{-10, 10};
-	std::uniform_real_distribution<float> speed_distribution{-10, 10};
+	std::uniform_int_distribution <int>   distribution         {  0,    6};
+	std::uniform_real_distribution<float> x_distribution       {  0, 1024};
+	std::uniform_real_distribution<float> y_distribution       {  0,  768};
+	std::uniform_real_distribution<float> angle_distribution   {  0,  360};
+	std::uniform_real_distribution<float> rotation_distribution{-10,   10};
+	std::uniform_real_distribution<float> speed_distribution   {-100,   100};
 	
 	for (size_t i = 0; i < 800; i++)
 		{
@@ -38,31 +38,38 @@ int main()
 
 		utils::math::vec2f position{x_distribution(mt), y_distribution(mt)};
 		utils::angle::deg  angle   {angle_distribution(mt)};
-		utils::math::vec2f speed   {speed_distribution (mt), speed_distribution (mt)};
+		utils::math::vec2f speed   {speed_distribution(mt), speed_distribution (mt)};
 		utils::angle::deg  rotation{rotation_distribution(mt)};
 
-		iige::ecs::components::add_movement(scene.ecs_registry, entity, {position, angle}, {speed, rotation});
+		iige::ecs::components::add_movement(scene.ecs_registry, entity, {position, angle}, {speed, rotation, 0});
 
 		int collider_type{distribution(mt)};
 		switch (collider_type)
 			{
 			case 0:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon>(scene.ecs_registry, entity, iige::ecs::components::utmg::polygon{{-10, -10}, {-5, 0}, { 10, -10 }, {10, 10}, {0, 0}, {-10, 10}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon         >(scene.ecs_registry, entity, iige::ecs::components::utmg::polygon{{-10, -10}, {-5, 0}, { 10, -10 }, {10, 10}, {0, 0}, {-10, 10}});
 				break;
 			case 1:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon>(scene.ecs_registry, entity, iige::ecs::components::utmg::convex_polygon{{0, 0}, {100, 50}, {50, 100}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon         >(scene.ecs_registry, entity, iige::ecs::components::utmg::convex_polygon{{0, 0}, {100, 50}, {50, 100}});
 				break;
 			case 2:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::circle >(scene.ecs_registry, entity, iige::ecs::components::utmg::circle{{0, 0}, 32});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::circle          >(scene.ecs_registry, entity, iige::ecs::components::utmg::circle{{0, 0}, 32});
 				break;
 			case 3:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::aabb   >(scene.ecs_registry, entity, iige::ecs::components::utmg::aabb{.ll{-10}, .up{-10}, .rr{10}, .dw{10}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::aabb            >(scene.ecs_registry, entity, iige::ecs::components::utmg::aabb{.ll{-10}, .up{-10}, .rr{10}, .dw{10}});
 				break;
 			case 4:
-				iige::ecs::components::add_collision<iige::ecs::components::colliders::segment >(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{-10, 10}, {10, -10}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::segment         >(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{-10, 10}, {10, -10}});
 				break;
 			case 5:
-				//iige::ecs::components::add_collision(scene.ecs_registry, entity, iige::ecs::components::collider{utils::math::vec2f{0, 0}});
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::point           >(scene.ecs_registry, entity, iige::ecs::components::utmg::point{0, 0});
+				break;
+			case 6:
+				iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{0, 0}, {0, 0}});
+				{
+				auto& speed{scene.ecs_registry.get<iige::ecs::components::speed>(entity)};
+				speed.position.x *= 10;
+				}
 				break;
 			}
 
@@ -73,9 +80,37 @@ int main()
 		//scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity, 32.f);
 		}
 	
-	iige::ecs::systems::collision_impl<2> collision;
+	/*for (size_t i = 0; i < 1; i++)
+		{
+		if (true)
+			{
+			auto entity{scene.ecs_registry.create()};
+
+			iige::ecs::components::add_movement(scene.ecs_registry, entity, {{64, 64}}, {{100, 0}, 0_deg, 0});
+
+			int collider_type{distribution(mt)};
+			iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{0, 0}, {0, 0}});
+		
+			scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
+			scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity);
+			}
+		if (true)
+			{
+			auto entity{scene.ecs_registry.create()};
+
+			iige::ecs::components::add_movement(scene.ecs_registry, entity, {{256, 64}});
+
+			int collider_type{distribution(mt)};
+			iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon         >(scene.ecs_registry, entity, iige::ecs::components::utmg::convex_polygon{{0, -50}, {100, 50}, {50, 100}});
+
+			scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
+			scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity);
+			}
+		}*/
+
+	iige::ecs::systems::collision_impl<1> collision;
 	
-	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 60.f};
+	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 10.f};
 
 
 	//Bouncing system

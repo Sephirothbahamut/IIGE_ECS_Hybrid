@@ -4,14 +4,37 @@
 #include <cassert>
 
 #include <utils/compilation/debug.h>
+
 #include <utils/concepts.h>
 #include <utils/math/vec2.h>
+#include <utils/math/vec2.h >
+#include <utils/math/vec2.h  >
+#include <utils/math/vec2.h   >
+#include <utils/math/vec2.h    >
+#include <utils/math/vec2.h     >
 #include <utils/math/transform2.h>
+#include <utils/math/transform2.h >
+#include <utils/math/transform2.h  >
 #include <utils/math/geometry/aabb.h>
+#include <utils/math/geometry/point.h>
 #include <utils/math/geometry/circle.h>
 #include <utils/math/geometry/polygon.h>
+#include <utils/math/geometry/polygon.h >
+#include <utils/math/geometry/polygon.h  >
+#include <utils/math/geometry/polygon.h   >
+#include <utils/math/geometry/polygon.h    >
 #include <utils/math/geometry/interactions.h>
+#include <utils/math/geometry/interactions.h >
+#include <utils/math/geometry/interactions.h  >
 #include <utils/math/geometry/transformations.h>
+#include <utils/math/geometry/continuous_point.h>
+#include <utils/math/geometry/continuous_point.h >
+#include <utils/math/geometry/continuous_point.h  >
+#include <utils/math/geometry/continuous_point.h   >
+#include <utils/math/geometry/continuous_point.h    >
+#include <utils/math/geometry/continuous_point.h     >
+#include <utils/math/geometry/continuous_point.h      >
+#include <utils/math/geometry/continuous_interactions.h>
 
 #include "../entt.h"
 
@@ -28,22 +51,24 @@ namespace iige::ecs::components
 	namespace
 		{
 		namespace utmg = ::utils::math::geometry;
-		namespace utm = ::utils::math;
+		namespace utm  = ::utils::math;
 		}
 
 #pragma region Collider types related stuff
 	namespace colliders
 		{
-		struct segment        { segment       (utmg::segment       && data) : data{std::move(data)} {} utmg::segment        data; static constexpr auto in_place_delete = true; };
-		struct aabb           { aabb          (utmg::aabb          && data) : data{std::move(data)} {} utmg::aabb           data; static constexpr auto in_place_delete = true; };
-		struct circle         { circle        (utmg::circle        && data) : data{std::move(data)} {} utmg::circle         data; static constexpr auto in_place_delete = true; };
-		struct polygon        { polygon       (utmg::polygon       && data) : data{std::move(data)} {} utmg::polygon        data; static constexpr auto in_place_delete = true; };
+		struct point            { point            (utmg::point            && data) : data{std::move(data)} {} utmg::point            data; static constexpr auto in_place_delete = true; };
+		struct segment          { segment          (utmg::segment          && data) : data{std::move(data)} {} utmg::segment          data; static constexpr auto in_place_delete = true; };
+		struct aabb             { aabb             (utmg::aabb             && data) : data{std::move(data)} {} utmg::aabb             data; static constexpr auto in_place_delete = true; };
+		struct circle           { circle           (utmg::circle           && data) : data{std::move(data)} {} utmg::circle           data; static constexpr auto in_place_delete = true; };
+		struct polygon          { polygon          (utmg::polygon          && data) : data{std::move(data)} {} utmg::polygon          data; static constexpr auto in_place_delete = true; };
+		struct continuous_point { continuous_point (utmg::continuous_point && data) : data{std::move(data)} {} utmg::continuous_point data; static constexpr auto in_place_delete = true; };
 		//struct convex_polygon { convex_polygon(utmg::convex_polygon&& data) : data{std::move(data)} {} utmg::convex_polygon data; static constexpr auto in_place_delete = true; };
 
 		template <typename T>
-		concept is_collider = ::utils::concepts::any_of<T, colliders::segment, colliders::aabb, colliders::circle, colliders::polygon/*, colliders::convex_polygon*/>;
+		concept is_collider = ::utils::concepts::any_of<T, point, segment, aabb, circle, polygon, continuous_point/*, colliders::convex_polygon*/>;
 
-		using ptr = std::variant<segment*, aabb*, circle*, polygon*/*, convex_polygon**/>;
+		using ptr = std::variant<point*, segment*, aabb*, circle*, polygon*, continuous_point*/*, convex_polygon**/>;
 
 		template <is_collider collider_t>
 		struct source : collider_t//moving objects will keep the original collider stored here
@@ -92,7 +117,7 @@ namespace iige::ecs::components
 		using namespace utils::math::geometry::transformations;
 
 		auto& current_collider    {registry.get_or_emplace<collider_t>(entity, std::forward<Args>(args)...)};
-		auto& current_collider_ptr{registry.get_or_emplace<colliders::ptr>(entity, &current_collider)};
+		auto& current_collider_ptr{registry.get_or_emplace<colliders::ptr>(entity, static_cast<collider_t*>(&current_collider))};
 
 		if constexpr (!std::is_same_v<collider_t, colliders::aabb>)
 			{
@@ -117,9 +142,12 @@ namespace iige::ecs::components
 			else { return; }
 			}
 
-		if constexpr (!std::is_same<collider_t, colliders::segment>) { if(registry.all_of<colliders::segment, colliders::source<colliders::segment>>(entity)) { registry.remove<colliders::segment>(entity); } }
-		if constexpr (!std::is_same<collider_t, colliders::circle >) { if(registry.all_of<colliders::circle , colliders::source<colliders::circle >>(entity)) { registry.remove<colliders::circle >(entity); } }
-		if constexpr (!std::is_same<collider_t, colliders::polygon>) { if(registry.all_of<colliders::polygon, colliders::source<colliders::polygon>>(entity)) { registry.remove<colliders::polygon>(entity); } }
+		if constexpr (!std::is_same<collider_t, colliders::point           >) { if (registry.all_of<colliders::point           , colliders::source<colliders::point           >>(entity)) { registry.remove<colliders::point           >(entity); } }
+		if constexpr (!std::is_same<collider_t, colliders::segment         >) { if (registry.all_of<colliders::segment         , colliders::source<colliders::segment         >>(entity)) { registry.remove<colliders::segment         >(entity); } }
+		if constexpr (!std::is_same<collider_t, colliders::circle          >) { if (registry.all_of<colliders::circle          , colliders::source<colliders::circle          >>(entity)) { registry.remove<colliders::circle          >(entity); } }
+		if constexpr (!std::is_same<collider_t, colliders::polygon         >) { if (registry.all_of<colliders::polygon         , colliders::source<colliders::polygon         >>(entity)) { registry.remove<colliders::polygon         >(entity); } }
+		if constexpr (!std::is_same<collider_t, colliders::continuous_point>) { if (registry.all_of<colliders::continuous_point, colliders::source<colliders::continuous_point>>(entity)) { registry.remove<colliders::continuous_point>(entity); } }
+		
 
 		add_collision<collider_t, is_static, Args...>(registry, entity, std::forward(args)...);
 		}
