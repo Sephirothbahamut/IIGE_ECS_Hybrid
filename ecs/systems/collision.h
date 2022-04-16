@@ -49,10 +49,10 @@ namespace iige::ecs::systems
 					}
 				if (true)
 					{
-					auto collided{scene.ecs_registry.view<utils::math::geometry::collision_data>()};
-					collided.each([&](const entt::entity entity, const utils::math::geometry::collision_data&)
+					auto collided{scene.ecs_registry.view<components::collision_data>()};
+					collided.each([&](const entt::entity entity, const components::collision_data&)
 						{
-						scene.ecs_registry.remove<utils::math::geometry::collision_data>(entity);
+						scene.ecs_registry.remove<components::collision_data>(entity);
 						});
 					}
 
@@ -103,12 +103,18 @@ namespace iige::ecs::systems
 										}
 									else if constexpr (components::colliders::is_continuous_collider<a_collider_type>)
 										{
-										auto result{utils::math::geometry::continuous_collides(a_collider_ptr->value(), b_collider_ptr->value())};
+										bool inside{utmg::contains(b_collider_ptr->value(), a_collider_ptr->value().a)};
+
+										auto result{utils::math::geometry::continuous_collides(a_collider_ptr->value(), b_collider_ptr->value(), inside)};
 										if (result)
 											{
 											//std::unique_lock lock{adding_mutex};
 											utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b));
-											utils::discard(scene.ecs_registry.get_or_emplace<components::collision_data>(entity_a, result.value()));
+											utils::discard(scene.ecs_registry.get_or_emplace<components::collision_data>(entity_a, components::collision_data{entity_b, result.value()}));
+											}
+										else if (inside)
+											{
+											utils::discard(scene.ecs_registry.get_or_emplace<components::collided_with>(entity_a, entity_b));
 											}
 										}
 									}, b_collider_ptr);

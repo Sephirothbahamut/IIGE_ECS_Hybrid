@@ -1,5 +1,7 @@
 
 
+#include <utils/cout_containers.h>
+#include <utils/math/vec2.h>
 
 #include <random>
 #include <utils/definitions.h>
@@ -13,6 +15,8 @@
 #include "ecs/components/spatial.h"
 #include "ecs/systems/collision.h"
 
+#include <utils/math/geometry/continuous_interactions.h>
+#include <iostream>
 int main()
 	{
 	using namespace utils::math::angle::literals;
@@ -32,7 +36,7 @@ int main()
 	std::uniform_real_distribution<float> rotation_distribution{-10,   10};
 	std::uniform_real_distribution<float> speed_distribution   {-100,   100};
 
-	for (size_t i = 0; i < 800; i++)
+	/*for (size_t i = 0; i < 800; i++)
 		{
 		auto entity{scene.ecs_registry.create()};
 
@@ -78,50 +82,82 @@ int main()
 		scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
 	
 		//scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity, 32.f);
-		}
+		}*/
 	
-	/*for (size_t i = 0; i < 1; i++)
+	for (size_t i = 0; i < 1; i++)
 		{
 		if (true)
-			{
+			{// Outer square
 			auto entity{scene.ecs_registry.create()};
 
-			iige::ecs::components::add_movement(scene.ecs_registry, entity, {{64, 64}}, {{100, 0}, 0_deg, 0});
+			iige::ecs::components::add_movement(scene.ecs_registry, entity, utils::math::transform2{utils::math::vec2f{window.sf_window.getSize().x / 2.f, window.sf_window.getSize().y / 2.f}});
 
 			int collider_type{distribution(mt)};
-			iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::ecs::components::utmg::segment{{0, 0}, {0, 0}});
+			//iige::ecs::components::add_collision<iige::ecs::components::colliders::aabb>(scene.ecs_registry, entity, iige::ecs::components::utmg::aabb  {.ll{-256}, .up{-256}, .rr{256}, .dw{256}});
+			iige::ecs::components::add_collision<iige::ecs::components::colliders::circle>(scene.ecs_registry, entity, iige::ecs::components::utmg::circle{{0, 0}, 256.f});
 		
-			scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
 			scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity);
 			}
 		if (true)
-			{
+			{// Inner square
 			auto entity{scene.ecs_registry.create()};
 
-			iige::ecs::components::add_movement(scene.ecs_registry, entity, {{256, 64}});
+			iige::ecs::components::add_movement(scene.ecs_registry, entity, utils::math::transform2{utils::math::vec2f{window.sf_window.getSize().x / 2.f, window.sf_window.getSize().y / 2.f}});
 
 			int collider_type{distribution(mt)};
-			iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon         >(scene.ecs_registry, entity, iige::ecs::components::utmg::convex_polygon{{0, -50}, {100, 50}, {50, 100}});
+			iige::ecs::components::add_collision<iige::ecs::components::colliders::polygon>(scene.ecs_registry, entity, iige::ecs::components::utmg::polygon{{-16, -16}, {16, -16}, {16, 16}, {-16, 16}});
 
-			scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
 			scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity);
 			}
-		}*/
+		if (true)
+			{// Bouncy projectile
+			auto entity{scene.ecs_registry.create()};
+
+			iige::ecs::components::add_movement(scene.ecs_registry, entity, 
+				utils::math::transform2{utils::math::vec2f{window.sf_window.getSize().x / 2.f - 128, window.sf_window.getSize().y / 2.f}},
+				utils::math::transform2{utils::math::vec2f{80, 3}});
+
+			int collider_type{distribution(mt)};
+			iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::ecs::components::utmg::point{0, 0});
+
+			scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity, 32.f);
+
+			scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
+			}
+		}
 
 	iige::ecs::systems::collision_impl<1> collision;
 	
-	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 10.f};
+	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 2.f};
 
 
-	//Bouncing system
+	//Entities bouncing system
+	loop.step_systems.emplace_back([&](iige::Scene& scene, iige::Window& window, float delta_time)
+		{
+		auto view{scene.ecs_registry.view<iige::ecs::components::collision_data, iige::ecs::components::speed, iige::ecs::components::transform_next>()};
+
+		view.each([&](const iige::ecs::components::collision_data& cdata, iige::ecs::components::speed& s, iige::ecs::components::transform_next& next)
+			{
+			using namespace utils::math::operators;
+			
+			auto new_speed_position{s.position - cdata.data.normal * 2.f * (s.position <dot> cdata.data.normal)};
+
+			next.position = cdata.data.impact_point + new_speed_position * (1 - cdata.data.t) * delta_time;
+
+
+			s.position = new_speed_position;
+			});
+		});
+
+	//Window wall bouncing system
 	loop.step_systems.emplace_back([&](iige::Scene& scene, iige::Window& window, float)
 		{
 		auto view{scene.ecs_registry.view<iige::ecs::components::transform, iige::ecs::components::speed>()};
 
 		view.each([&](const iige::ecs::components::transform& t, iige::ecs::components::speed& s)
 			{
-			if (t.position.x < 0                            && s.position.x < 0) { s.position.x *= -1; }
-			if (t.position.y < 0                            && s.position.y < 0) { s.position.y *= -1; }
+			if (t.position.x < 0 && s.position.x < 0) { s.position.x *= -1; }
+			if (t.position.y < 0 && s.position.y < 0) { s.position.y *= -1; }
 			if (t.position.x > window.sf_window.getSize().x && s.position.x > 0) { s.position.x *= -1; }
 			if (t.position.y > window.sf_window.getSize().y && s.position.y > 0) { s.position.y *= -1; }
 			});

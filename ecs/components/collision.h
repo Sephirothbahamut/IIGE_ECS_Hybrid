@@ -113,7 +113,11 @@ namespace iige::ecs::components
 #pragma region Collision results
 	struct collided_with { entt::entity other{entt::null}; };
 
-	using collision_data = utmg::collision_data;
+	struct collision_data
+		{
+		entt::entity other{entt::null};
+		utmg::collision_data data;
+		};
 
 #pragma endregion Collision flags
 
@@ -171,8 +175,6 @@ namespace iige::ecs::components
 			remove_collider<candidate>(registry, entity);
 			}
 		}
-
-
 
 	template <colliders::is_collider collider_t, bool is_static = false, typename ...Args>
 	inline void add_or_replace_collision(entt::registry& registry, entt::entity entity, Args&&... args) noexcept
