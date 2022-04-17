@@ -14,19 +14,15 @@
 
 #include "../components/collision.h"
 #include "../components/spatial.h"
+#include "../../types/core.h"
 
 #include "../../Window.h"
 #include "../../Scene.h"
 
 
+
 namespace iige::ecs::systems
 	{
-	namespace
-		{
-		namespace utmg = utils::math::geometry;
-		namespace utm = utils::math;
-		}
-
 	class collision
 		{
 		public:
@@ -81,7 +77,7 @@ namespace iige::ecs::systems
 						{
 						if (entity_a == entity_b) { return; }
 
-						if (utmg::collides(a_aabb.value(), b_aabb.value()))
+						if (shapes::collides(a_aabb.value(), b_aabb.value()))
 							{
 							bool collides{false};
 
@@ -94,7 +90,7 @@ namespace iige::ecs::systems
 
 									if constexpr (components::colliders::is_discrete_collider<a_collider_type>)
 										{
-										bool collides{utmg::collides(a_collider_ptr->value(), b_collider_ptr->value())};
+										bool collides{shapes::collides(a_collider_ptr->value(), b_collider_ptr->value())};
 										if (collides)
 											{
 											//std::unique_lock lock{adding_mutex};
@@ -103,7 +99,7 @@ namespace iige::ecs::systems
 										}
 									else if constexpr (components::colliders::is_continuous_collider<a_collider_type>)
 										{
-										bool inside{utmg::contains(b_collider_ptr->value(), a_collider_ptr->value().a)};
+										bool inside{shapes::contains(b_collider_ptr->value(), a_collider_ptr->value().a)};
 
 										auto result{utils::math::geometry::continuous_collides(a_collider_ptr->value(), b_collider_ptr->value(), inside)};
 										if (result)
@@ -126,17 +122,17 @@ namespace iige::ecs::systems
 #pragma optimize("", on)
 		};
 
-	inline void update_colliders_vertex_array(const components::utmg::segment         & shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const shapes::segment         & shape, sf::VertexArray& va, sf::Color c)
 		{
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.a), c}); va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.b), c});
 		}
-	inline void update_colliders_vertex_array(const components::utmg::circle          & shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const shapes::circle          & shape, sf::VertexArray& va, sf::Color c)
 		{
 		shape.center;
 		shape.radius;
 
-		utm::vec2f right{utm::vec2f::right() * shape.radius};
-		utm::vec2f vec{utm::vec2f::right() * shape.radius};
+		iige::vec2f right{iige::vec2f::right() * shape.radius};
+		iige::vec2f vec  {iige::vec2f::right() * shape.radius};
 
 		utils::math::angle::deg delta_α{1000 / shape.radius};
 
@@ -150,7 +146,7 @@ namespace iige::ecs::systems
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(right + shape.center), c});
 		}
-	inline void update_colliders_vertex_array(const components::utmg::polygon         & shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const shapes::polygon         & shape, sf::VertexArray& va, sf::Color c)
 		{
 		for (const auto& edge : shape.get_edges())
 			{
@@ -158,7 +154,7 @@ namespace iige::ecs::systems
 			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.b), c});
 			}
 		}
-	inline void update_colliders_vertex_array(const components::utmg::aabb            & shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const shapes::aabb            & shape, sf::VertexArray& va, sf::Color c)
 		{
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
@@ -169,20 +165,20 @@ namespace iige::ecs::systems
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
 		}
-	inline void update_colliders_vertex_array(const components::utmg::point           & shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const shapes::point           & shape, sf::VertexArray& va, sf::Color c)
 			{
-			components::utmg::aabb aabb{.ll{shape.x - 1}, .up{shape.y - 1}, .rr{shape.x + 1}, .dw{shape.y + 1}};
+			shapes::aabb aabb{.ll{shape.x - 1}, .up{shape.y - 1}, .rr{shape.x + 1}, .dw{shape.y + 1}};
 			update_colliders_vertex_array(aabb, va, c);
 			}
-	inline void update_colliders_vertex_array(const components::utmg::continuous_point& shape, sf::VertexArray& va, sf::Color c)
+	inline void update_colliders_vertex_array(const utils::math::geometry::continuous_point& shape, sf::VertexArray& va, sf::Color c)
 		{
 		update_colliders_vertex_array(shape.a, va, c);
-		update_colliders_vertex_array(static_cast<components::utmg::segment>(shape), va, c);
+		update_colliders_vertex_array(static_cast<shapes::segment>(shape), va, c);
 
-		components::utm::vec2f arrow_hand_ll{shape.b + (shape.perpendicular_left () * 4.f) - (shape.forward() * 4.f)};
-		components::utm::vec2f arrow_hand_rr{shape.b + (shape.perpendicular_right() * 4.f) - (shape.forward() * 4.f)};
-		update_colliders_vertex_array(components::utmg::segment{shape.b, arrow_hand_ll}, va, c);
-		update_colliders_vertex_array(components::utmg::segment{shape.b, arrow_hand_rr}, va, c);
+		vec2f arrow_hand_ll{shape.b + (shape.perpendicular_left () * 4.f) - (shape.forward() * 4.f)};
+		vec2f arrow_hand_rr{shape.b + (shape.perpendicular_right() * 4.f) - (shape.forward() * 4.f)};
+		update_colliders_vertex_array(shapes::segment{shape.b, arrow_hand_ll}, va, c);
+		update_colliders_vertex_array(shapes::segment{shape.b, arrow_hand_rr}, va, c);
 		}
 
 	template <components::colliders::is_collider T>

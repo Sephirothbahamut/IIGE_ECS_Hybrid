@@ -160,7 +160,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ecs\components\collision.cpp" />
     <ClCompile Include="ecs\components\spatial.cpp" />
     <ClCompile Include="Fakemain.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -178,6 +177,8 @@
     <ClInclude Include="ecs\systems\move.h" />
     <ClInclude Include="Loop.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="types\core.h" />
+    <ClInclude Include="types\shapes.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -23,28 +23,28 @@ namespace iige::ecs::systems
 			{
 			auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::source<collider_t>, collider_t, components::colliders::aabb>()};
 
-			using namespace utils::math::geometry::transformations;
+			using namespace iige::shapes::transformations;
 			moving_colliders_view.each([](const components::transform& transform, const components::colliders::source<collider_t>& collider_source, collider_t& collider, components::colliders::aabb& aabb)
 				{
 				using namespace iige::ecs::components;//TODO check if necessary
 				collider.value() = collider_source.value() * transform;
-				aabb.value() = static_cast<components::utmg::aabb>(collider.value());
+				aabb.value() = static_cast<shapes::aabb>(collider.value());
 				});
 			}
 		else if constexpr (components::colliders::is_continuous_collider<collider_t>)
 			{
-			auto moving_colliders_view{scene.ecs_registry.view<components::transform_prev, components::transform_next, components::colliders::source<collider_t::discrete>, collider_t, components::colliders::aabb>()};
+			auto moving_colliders_view{scene.ecs_registry.view<components::transform_prev, components::transform_next, typename collider_t::discrete_source, collider_t, components::colliders::aabb>()};
 
-			using namespace utils::math::geometry::transformations;
+			using namespace iige::shapes::transformations;
 			moving_colliders_view.each([]
 					(
-					const components::transform_prev& transform_prev, const components::transform_next& transform_next, 
-					const components::colliders::source<collider_t::discrete>& collider_source, collider_t& collider, components::colliders::aabb& aabb
+					const components::transform& transform_prev, const components::transform& transform_next,
+					const typename collider_t::discrete_source& collider_source, collider_t& collider, components::colliders::aabb& aabb
 					)
 				{
 				using namespace iige::ecs::components;//TODO check if necessary
 				collider.value() = collider_t{collider_source.value() * transform_prev, collider_source.value() * transform_next};
-				aabb.value() = static_cast<components::utmg::aabb>(collider.value());
+				aabb.value() = static_cast<shapes::aabb>(collider.value());
 				});
 			}
 
@@ -55,7 +55,7 @@ namespace iige::ecs::systems
 		{
 		auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::source<components::colliders::aabb>, components::colliders::aabb>()};
 
-		using namespace utils::math::geometry::transformations;
+		using namespace iige::shapes::transformations;
 		moving_colliders_view.each([](const components::transform& transform, const components::colliders::source<components::colliders::aabb>& collider_source, components::colliders::aabb& collider)
 			{
 			using namespace iige::ecs::components;
@@ -104,7 +104,6 @@ namespace iige::ecs::systems
 			/**/
 		movement_view.each([interpolation](utils::math::transform2& transform, const utils::math::transform2& transform_next, const utils::math::transform2& transform_prev)
 			{
-			
 			transform = {utils::math::transform2::lerp(transform_prev, transform_next, interpolation)};
 			});
 		}

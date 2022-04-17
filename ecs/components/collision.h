@@ -4,41 +4,48 @@
 #include <cassert>
 
 #include <utils/compilation/debug.h>
-
-#include <utils/concepts.h>
-#include <utils/math/vec2.h>
-#include <utils/math/vec2.h >
-#include <utils/math/vec2.h  >
-#include <utils/math/vec2.h   >
-#include <utils/math/vec2.h    >
-#include <utils/math/vec2.h     >
-#include <utils/math/transform2.h>
-#include <utils/math/transform2.h >
-#include <utils/math/transform2.h  >
-#include <utils/math/geometry/aabb.h>
-#include <utils/math/geometry/point.h>
-#include <utils/math/geometry/circle.h>
-#include <utils/math/geometry/polygon.h>
-#include <utils/math/geometry/polygon.h >
-#include <utils/math/geometry/polygon.h  >
-#include <utils/math/geometry/polygon.h   >
-#include <utils/math/geometry/polygon.h    >
 #include <utils/math/geometry/interactions.h>
-#include <utils/math/geometry/interactions.h >
-#include <utils/math/geometry/interactions.h  >
 #include <utils/math/geometry/transformations.h>
-#include <utils/math/geometry/continuous_point.h>
-#include <utils/math/geometry/continuous_point.h >
-#include <utils/math/geometry/continuous_point.h  >
-#include <utils/math/geometry/continuous_point.h   >
-#include <utils/math/geometry/continuous_point.h    >
-#include <utils/math/geometry/continuous_point.h     >
-#include <utils/math/geometry/continuous_point.h      >
 #include <utils/math/geometry/continuous_interactions.h>
+
+// Left in memory of the pyramids
+// #include <utils/concepts.h>
+// #include <utils/math/vec2.h>
+// #include <utils/math/vec2.h >
+// #include <utils/math/vec2.h  >
+// #include <utils/math/vec2.h   >
+// #include <utils/math/vec2.h    >
+// #include <utils/math/vec2.h     >
+// #include <utils/math/transform2.h>
+// #include <utils/math/transform2.h >
+// #include <utils/math/transform2.h  >
+// #include <utils/math/geometry/aabb.h>
+// #include <utils/math/geometry/point.h>
+// #include <utils/math/geometry/circle.h>
+// #include <utils/math/geometry/polygon.h>
+// #include <utils/math/geometry/polygon.h >
+// #include <utils/math/geometry/polygon.h  >
+// #include <utils/math/geometry/polygon.h   >
+// #include <utils/math/geometry/polygon.h    >
+// #include <utils/math/geometry/interactions.h>
+// #include <utils/math/geometry/interactions.h >
+// #include <utils/math/geometry/interactions.h  >
+// #include <utils/math/geometry/transformations.h>
+// #include <utils/math/geometry/continuous_point.h>
+// #include <utils/math/geometry/continuous_point.h >
+// #include <utils/math/geometry/continuous_point.h  >
+// #include <utils/math/geometry/continuous_point.h   >
+// #include <utils/math/geometry/continuous_point.h    >
+// #include <utils/math/geometry/continuous_point.h     >
+// #include <utils/math/geometry/continuous_point.h      >
+// #include <utils/math/geometry/continuous_interactions.h>
 
 #include <SFML/Graphics.hpp>
 
 #include "../entt.h"
+
+#include "../../types/shapes.h"
+#include "../../types/core.h"
 
 #include "component.h"
 #include "../exceptions.h"
@@ -49,54 +56,45 @@ namespace iige::ecs::components
 	{
 	using transform = ::utils::math::transform2;
 
-	namespace
-		{
-		namespace utmg = ::utils::math::geometry;
-		namespace utm  = ::utils::math;
-		}
-
 #pragma region Collider types related stuff
 	namespace colliders
 		{
-		template <typename shape_t>
-		using discrete_collider = component_in_place_delete<shape_t>;
-
-
-		using  point          = discrete_collider<utmg::point         >;
-		using  segment        = discrete_collider<utmg::segment       >;
-		using  aabb           = discrete_collider<utmg::aabb          >;
-		using  circle         = discrete_collider<utmg::circle        >;
-		using  polygon        = discrete_collider<utmg::polygon       >;
-		using  convex_polygon = discrete_collider<utmg::convex_polygon>;
-
 		template <typename T>
-		concept is_discrete_collider = ::utils::concepts::any_of<T, point, segment, aabb, circle, polygon, convex_polygon>;
+		concept is_discrete_collider = utils::math::geometry::shape_discrete<typename T::value_type>;
 
-		template <typename continuous_shape_t, is_discrete_collider discrete_shape_t>
-		struct continuous_collider : component_in_place_delete<continuous_shape_t>
+		template <is_discrete_collider T>
+		using source = component<typename T::value_type, 1, false>;
+
+		template <utils::math::geometry::shape_discrete discrete_shape_t>
+		struct discrete_collider : component<discrete_shape_t, 0, true>
 			{
-			using component_in_place_delete<continuous_shape_t>::component_in_place_delete;
-			using discrete = discrete_shape_t;
+			using component<discrete_shape_t, 0, true>::component;
+			using discrete_source = source<component<discrete_shape_t, 0, true>>;
 			};
 
-		using continuous_point = continuous_collider<utmg::continuous_point, point>;
-		
+		using  point          = discrete_collider<iige::shapes::point         >;
+		using  segment        = discrete_collider<iige::shapes::segment       >;
+		using  aabb           = discrete_collider<iige::shapes::aabb          >;
+		using  circle         = discrete_collider<iige::shapes::circle        >;
+		using  polygon        = discrete_collider<iige::shapes::polygon       >;
+		using  convex_polygon = discrete_collider<iige::shapes::convex_polygon>;
 
+		template <utils::math::geometry::shape_continuous continuous_shape_t, typename discrete_shape_t>
+		struct continuous_collider : component<continuous_shape_t, 0, true>
+			{
+			using component<continuous_shape_t, 0, true>::component;
+			using discrete_source = source<component<discrete_shape_t, 0, true>>;
+			};
+
+		using continuous_point = continuous_collider<utils::math::geometry::continuous_point, iige::shapes::point>;
+		
 		template <typename T>
-		concept is_continuous_collider = ::utils::concepts::any_of<T, continuous_point>;
+		concept is_continuous_collider = utils::math::geometry::shape_continuous<typename T::value_type>;
 
 		template <typename T>
 		concept is_collider = is_discrete_collider<T> || is_continuous_collider<T>;
 
 		using ptr   = std::variant<point*, segment*, aabb*, circle*, polygon*, convex_polygon*, continuous_point*>;
-
-		template <is_discrete_collider collider_t>
-		struct source : collider_t//moving objects will keep the original collider stored here
-			{
-			using collider_t::collider_t;
-			//source(const collider_t& copy) noexcept : collider_t{copy} {}
-			//source& operator=(const collider_t& copy) noexcept { collider_t::operator=(copy); return *this; }
-			};
 		}
 
 #pragma endregion Collider types related stuff
@@ -116,7 +114,7 @@ namespace iige::ecs::components
 	struct collision_data
 		{
 		entt::entity other{entt::null};
-		utmg::collision_data data;
+		utils::math::geometry::collision_data data;
 		};
 
 #pragma endregion Collision flags
@@ -128,14 +126,14 @@ namespace iige::ecs::components
 	template <colliders::is_collider collider_t, bool is_static = false, typename ...Args>
 	inline void add_collision(entt::registry& registry, entt::entity entity, Args&&... args) noexcept
 		{
-		using namespace utils::math::geometry::transformations;
+		using namespace iige::shapes::transformations;
 
 		auto& current_collider{registry.get_or_emplace<collider_t>(entity)};
 		auto& current_collider_ptr{registry.get_or_emplace<colliders::ptr>(entity, static_cast<collider_t*>(&current_collider))};
 
 		if constexpr (!std::is_same_v<collider_t, colliders::aabb>)
 			{
-			utils::discard(registry.get_or_emplace<colliders::aabb>(entity, static_cast<utmg::aabb>(current_collider.value())));
+			utils::discard(registry.get_or_emplace<colliders::aabb>(entity, static_cast<shapes::aabb>(current_collider.value())));
 			}
 
 		if constexpr (!is_static)
@@ -146,7 +144,7 @@ namespace iige::ecs::components
 				}
 			else if constexpr (colliders::is_continuous_collider<collider_t>)
 				{
-				utils::discard(registry.get_or_emplace<colliders::source<collider_t::discrete>>(entity, std::forward<Args>(args)...));
+				utils::discard(registry.get_or_emplace<typename collider_t::discrete_source>(entity, std::forward<Args>(args)...));
 				}
 			}
 		}
@@ -161,8 +159,8 @@ namespace iige::ecs::components
 			}
 		else if constexpr (colliders::is_continuous_collider<collider_t>)
 			{
-			if (registry.all_of<                  collider_t           >) { registry.remove<                  collider_t           >(entity); }
-			if (registry.all_of<colliders::source<collider_t::discrete>>) { registry.remove<colliders::source<collider_t::discrete>>(entity); }
+			if (registry.all_of<         collider_t                 >) { registry.remove<         collider_t                 >(entity); }
+			if (registry.all_of<typename collider_t::discrete_source>) { registry.remove<typename collider_t::discrete_source>(entity); }
 			}
 		}
 

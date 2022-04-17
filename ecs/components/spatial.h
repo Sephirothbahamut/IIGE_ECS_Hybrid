@@ -1,15 +1,22 @@
 #pragma once
 
-#include <utils/math/transform2.h>
 #include <utils/math/geometry/transformations.h>
 #include <utils/definitions.h>
+
+#include "../../types/core.h"
+
 #include "collision.h"
+#include "component.h"
 
 namespace iige::ecs::components
 	{
 	using transform = utils::math::transform2;
 
-	struct transform_next : transform
+	using transform_next = component<transform, 1>;
+	using transform_prev = component<transform, 2>;
+	using speed          = component<transform, 3>;
+
+	/*struct transform_next : transform
 		{
 		using transform::transform2;
 		transform_next           (const transform& copy) noexcept : transform{copy} {}
@@ -26,7 +33,7 @@ namespace iige::ecs::components
 		using transform::transform2;
 		speed                    (const transform& copy) noexcept : transform{copy} {}
 		speed         & operator=(const transform& copy) noexcept { transform::operator= (copy); return *this; }
-		};
+		};*/
 
 	void add_movement(entt::registry& registry, entt::entity entity, components::transform transform = {}, components::transform speed = {{0, 0}, 0, 0});
 	}
