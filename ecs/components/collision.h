@@ -101,6 +101,7 @@ namespace iige::ecs::components
 
 		namespace details
 			{
+			//TODO ptr must have "hollow" boolean. If true discrete-discrete(hollow) collision checks only intersects, while continue-discrete(hollow) still check collides for the "inside" boolean to pass to the continuous check, but if hollow it won't add the discrete collided with component.
 			using ptr   = std::variant<point*, segment*, aabb*, circle*, polygon*, convex_polygon*, continuous_point*>;
 			}
 		}
