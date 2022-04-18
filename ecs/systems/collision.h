@@ -61,8 +61,8 @@ namespace iige::ecs::systems
 			template<size_t layer>
 			void evaluate(iige::Scene& scene) const noexcept
 				{
-				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::aabb, components::colliders::ptr>()};
-				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::colliders::aabb, components::colliders::ptr>()};
+				auto targets/*TODO better names*/{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::aabb, components::colliders::details::ptr>()};
+				auto active /*TODO better names*/{scene.ecs_registry.view<components::collides_with<layer>, components::colliders::aabb, components::colliders::details::ptr>()};
 
 				/*
 				std::mutex adding_mutex;
@@ -71,9 +71,9 @@ namespace iige::ecs::systems
 					const components::colliders::aabb& a_aabb        {active.get<components::colliders::aabb>(entity_a)};
 					components::colliders::ptr         a_collider_ptr{active.get<components::colliders::ptr >(entity_a)};
 					/**/
-				active.each([&](const entt::entity entity_a, const components::colliders::aabb& a_aabb, components::colliders::ptr a_collider_ptr)
+				active.each([&](const entt::entity entity_a, const components::colliders::aabb& a_aabb, components::colliders::details::ptr a_collider_ptr)
 					{
-					targets.each([&](const entt::entity entity_b, const components::colliders::aabb& b_aabb, components::colliders::ptr b_collider_ptr)
+					targets.each([&](const entt::entity entity_b, const components::colliders::aabb& b_aabb, components::colliders::details::ptr b_collider_ptr)
 						{
 						if (entity_a == entity_b) { return; }
 

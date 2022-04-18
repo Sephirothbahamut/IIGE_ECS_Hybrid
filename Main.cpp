@@ -46,7 +46,7 @@ int main()
 		utils::math::vec2f       speed   {speed_distribution(mt), speed_distribution (mt)};
 		utils::math::angle::deg  rotation{rotation_distribution(mt)};
 
-		iige::ecs::components::add_movement(scene.ecs_registry, entity, {position, angle}, {speed, rotation, 0});
+		iige::ecs::components::add_movement(scene.ecs_registry, entity, {speed, rotation, 0.f}, {position, angle});
 
 		int collider_type{distribution(mt)};
 		switch (collider_type)
@@ -73,12 +73,14 @@ int main()
 				iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::shapes::point{0, 0});
 				{
 				auto& speed{scene.ecs_registry.get<iige::ecs::components::speed>(entity)};
-				speed.value().position.x *= 10;
+				//speed.value().position.x *= 10;
 				}
 				break;
 			}
 
-		
+		scene.ecs_registry.emplace<iige::ecs::components::speed::x_max>(entity, 10.f);
+		iige::ecs::components::add_acceleration(scene.ecs_registry, entity, {{-.5f, 0.f}, 0.f, 0.f});
+
 		scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity);
 		scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
 	
@@ -130,7 +132,7 @@ int main()
 
 	iige::ecs::systems::collision_impl<1> collision;
 	
-	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 2.f};
+	iige::loop::fixed_fps_and_game_speed loop{scene, window, collision, 40.f};
 
 
 	//Entities bouncing system
@@ -156,7 +158,7 @@ int main()
 		{
 		auto view{scene.ecs_registry.view<iige::ecs::components::transform, iige::ecs::components::speed>()};
 
-		view.each([&](const iige::ecs::components::transform& t, iige::ecs::components::transform& s)
+		view.each([&](const iige::transform& t, iige::transform& s)
 			{
 			if (t.position.x < 0 && s.position.x < 0) { s.position.x *= -1; }
 			if (t.position.y < 0 && s.position.y < 0) { s.position.y *= -1; }

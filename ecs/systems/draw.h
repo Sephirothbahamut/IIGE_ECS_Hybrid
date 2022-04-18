@@ -14,7 +14,7 @@ namespace iige::ecs::systems
 		{
 		auto movement_view{scene.ecs_registry.view<components::transform, components::bad_draw>()};
 
-		movement_view.each([&](const auto& transform, auto& drawable)
+		movement_view.each([&](const iige::transform& transform, auto& drawable)
 			{
 			drawable.cs.setPosition(utils::math::vec_cast<sf::Vector2, float>(transform.position));
 			drawable.cs.setRotation(transform.orientation.value);

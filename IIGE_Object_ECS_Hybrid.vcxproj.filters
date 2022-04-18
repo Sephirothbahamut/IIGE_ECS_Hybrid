@@ -36,9 +36,6 @@
     <ClCompile Include="Fakemain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ecs\components\spatial.cpp">
-      <Filter>Header Files\ecs\components</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Loop.h">

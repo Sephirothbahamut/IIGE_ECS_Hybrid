@@ -21,10 +21,10 @@ namespace iige::ecs::systems
 		{
 		if constexpr (components::colliders::is_discrete_collider<collider_t>)
 			{
-			auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::source<collider_t>, collider_t, components::colliders::aabb>()};
+			auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::details::source<collider_t>, collider_t, components::colliders::aabb>()};
 
 			using namespace iige::shapes::transformations;
-			moving_colliders_view.each([](const components::transform& transform, const components::colliders::source<collider_t>& collider_source, collider_t& collider, components::colliders::aabb& aabb)
+			moving_colliders_view.each([](const iige::transform& transform, const components::colliders::details::source<collider_t>& collider_source, collider_t& collider, components::colliders::aabb& aabb)
 				{
 				using namespace iige::ecs::components;//TODO check if necessary
 				collider.value() = collider_source.value() * transform;
@@ -38,7 +38,7 @@ namespace iige::ecs::systems
 			using namespace iige::shapes::transformations;
 			moving_colliders_view.each([]
 					(
-					const components::transform& transform_prev, const components::transform& transform_next,
+					const iige::transform& transform_prev, const iige::transform& transform_next,
 					const typename collider_t::discrete_source& collider_source, collider_t& collider, components::colliders::aabb& aabb
 					)
 				{
@@ -47,24 +47,58 @@ namespace iige::ecs::systems
 				aabb.value() = static_cast<shapes::aabb>(collider.value());
 				});
 			}
-
 		}
 
 	template <>
 	void move_colliders<components::colliders::aabb>(iige::Scene& scene)
 		{
-		auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::source<components::colliders::aabb>, components::colliders::aabb>()};
+		auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::details::source<components::colliders::aabb>, components::colliders::aabb>()};
 
 		using namespace iige::shapes::transformations;
-		moving_colliders_view.each([](const components::transform& transform, const components::colliders::source<components::colliders::aabb>& collider_source, components::colliders::aabb& collider)
+		moving_colliders_view.each([](const iige::transform& transform, const components::colliders::details::source<components::colliders::aabb>& collider_source, components::colliders::aabb& collider)
 			{
 			using namespace iige::ecs::components;
 			collider.value() = collider_source.value() * transform;
 			});
 		}
 
+
+	namespace details
+		{
+		template <typename transform_type, typename constraints_type = transform_type>
+		void apply_constraints(iige::Scene& scene)
+			{
+			auto     x_min{scene.ecs_registry.view<transform_type, typename constraints_type::    x_min>()}; 
+			auto     x_max{scene.ecs_registry.view<transform_type, typename constraints_type::    x_max>()}; 
+			auto     y_min{scene.ecs_registry.view<transform_type, typename constraints_type::    y_min>()}; 
+			auto     y_max{scene.ecs_registry.view<transform_type, typename constraints_type::    y_max>()}; 
+			auto angle_min{scene.ecs_registry.view<transform_type, typename constraints_type::angle_min>()}; 
+			auto angle_max{scene.ecs_registry.view<transform_type, typename constraints_type::angle_max>()}; 
+			auto scale_min{scene.ecs_registry.view<transform_type, typename constraints_type::scale_min>()}; 
+			auto scale_max{scene.ecs_registry.view<transform_type, typename constraints_type::scale_max>()}; 
+
+			    x_min.each([](iige::transform& transform, const float            constraint) { transform.position.x = std::max(transform.position.x, constraint); });
+				x_max.each([](iige::transform& transform, const float            constraint) { transform.position.x = std::min(transform.position.x, constraint); });
+				y_min.each([](iige::transform& transform, const float            constraint) { transform.position.y = std::max(transform.position.y, constraint); });
+				y_max.each([](iige::transform& transform, const float            constraint) { transform.position.y = std::min(transform.position.y, constraint); });
+			angle_min.each([](iige::transform& transform, const iige::angle::deg constraint) { transform.orientation.value = std::max(transform.orientation.value, constraint.value); });
+			angle_max.each([](iige::transform& transform, const iige::angle::deg constraint) { transform.orientation.value = std::min(transform.orientation.value, constraint.value); });
+			scale_min.each([](iige::transform& transform, const float            constraint) { transform.size = std::max(transform.size, constraint); });
+			scale_max.each([](iige::transform& transform, const float            constraint) { transform.size = std::min(transform.size, constraint); });
+			}
+		}
+
+
 	inline void move(iige::Scene& scene, float delta_time)
 		{
+
+
+		details::apply_constraints<components::acceleration>(scene);
+		auto accelerate_view{scene.ecs_registry.view<components::speed, components::acceleration>()};
+		accelerate_view.each([&](iige::transform& speed, const iige::transform& acceleration) { speed += acceleration * delta_time; });
+
+		details::apply_constraints<components::speed>(scene);
+
 		auto movement_view{scene.ecs_registry.view<components::transform, components::speed, components::transform_next, components::transform_prev>()};
 
 
@@ -82,6 +116,7 @@ namespace iige::ecs::systems
 			transform_next += speed * delta_time;
 			});
 
+		details::apply_constraints<components::transform_next, components::transform>(scene);
 
 		move_colliders<components::colliders::point           >(scene);
 		move_colliders<components::colliders::segment         >(scene);
