@@ -18,6 +18,9 @@
 #include <utils/math/geometry/continuous_interactions.h>
 #include <iostream>
 
+
+
+
 int main()
 	{
 	using namespace utils::math::angle::literals;
@@ -132,7 +135,7 @@ int main()
 
 	iige::ecs::systems::collision_impl<1> collision;
 	
-	iige::loop::fixed_fps_and_game_speed loop{scene, window, collision, 40.f};
+	iige::loop::variable_fps_and_game_speed loop{scene, window, collision};
 
 
 	//Entities bouncing system

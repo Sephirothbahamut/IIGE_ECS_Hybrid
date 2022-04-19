@@ -10,43 +10,38 @@
 
 namespace iige::ecs::components
 	{
-	/*using transform = utils::math::transform2;
-
-	using transform_next = component<transform, 1>;
-	using transform_prev = component<transform, 2>;
-	using speed          = component<transform, 3>;
-	using acceleration   = component<transform, 4>;*/
+	using namespace entt::literals;
 
 	namespace details
 		{
-		template <typename component_t, size_t index>
+		template <typename component_t, entt::id_type index>
 		struct spatial_constraints : component<component_t, index>
 			{
 			using component<component_t, index>::component;
 			};
 
-		template <typename size_t index>
-		struct transform_component : component<utils::math::transform2>
+		template <typename entt::id_type index>
+		struct transform_component : component<utils::math::transform2, index>
 			{
-			using component<utils::math::transform2>::component;
-			using x_min         = details::spatial_constraints<float     , (index * 100) + 0>;
-			using x_max         = details::spatial_constraints<float     , (index * 100) + 1>;
-			using y_min         = details::spatial_constraints<float     , (index * 100) + 2>;
-			using y_max         = details::spatial_constraints<float     , (index * 100) + 3>;
-			using magnitude_min = details::spatial_constraints<float     , (index * 100) + 4>;
-			using magnitude_max = details::spatial_constraints<float     , (index * 100) + 5>;
-			using angle_min     = details::spatial_constraints<angle::deg, (index * 100) + 0>;
-			using angle_max     = details::spatial_constraints<angle::deg, (index * 100) + 1>;
-			using scale_min     = details::spatial_constraints<float     , (index * 100) + 6>;
-			using scale_max     = details::spatial_constraints<float     , (index * 100) + 7>;
+			using component<utils::math::transform2, index>::component;
+			using x_min         = details::spatial_constraints<float     , (index * 10) + 0>;
+			using x_max         = details::spatial_constraints<float     , (index * 10) + 1>;
+			using y_min         = details::spatial_constraints<float     , (index * 10) + 2>;
+			using y_max         = details::spatial_constraints<float     , (index * 10) + 3>;
+			using magnitude_min = details::spatial_constraints<float     , (index * 10) + 4>;
+			using magnitude_max = details::spatial_constraints<float     , (index * 10) + 5>;
+			using angle_min     = details::spatial_constraints<angle::deg, (index * 10) + 0>;
+			using angle_max     = details::spatial_constraints<angle::deg, (index * 10) + 1>;
+			using scale_min     = details::spatial_constraints<float     , (index * 10) + 6>;
+			using scale_max     = details::spatial_constraints<float     , (index * 10) + 7>;
 			};
 		}
 
-	using transform      = details::transform_component<0>;
-	using transform_next = details::transform_component<1>;
-	using transform_prev = details::transform_component<2>;
-	using speed          = details::transform_component<3>;
-	using acceleration   = details::transform_component<4>;
+	using transform      = details::transform_component<"transform"_hs>;
+	using transform_next = details::transform_component<"transform_next"_hs>;
+	using transform_prev = details::transform_component<"transform_prev"_hs>;
+	using speed          = details::transform_component<"speed"_hs>;
+	using acceleration   = details::transform_component<"acceleration"_hs>;
 
 	inline void in_world(entt::registry& registry, entt::entity entity, iige::transform transform = {})
 		{

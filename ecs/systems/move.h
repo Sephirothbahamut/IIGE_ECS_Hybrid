@@ -77,14 +77,14 @@ namespace iige::ecs::systems
 			auto scale_min{scene.ecs_registry.view<transform_type, typename constraints_type::scale_min>()}; 
 			auto scale_max{scene.ecs_registry.view<transform_type, typename constraints_type::scale_max>()}; 
 
-			    x_min.each([](iige::transform& transform, const float            constraint) { transform.position.x = std::max(transform.position.x, constraint); });
-				x_max.each([](iige::transform& transform, const float            constraint) { transform.position.x = std::min(transform.position.x, constraint); });
-				y_min.each([](iige::transform& transform, const float            constraint) { transform.position.y = std::max(transform.position.y, constraint); });
-				y_max.each([](iige::transform& transform, const float            constraint) { transform.position.y = std::min(transform.position.y, constraint); });
-			angle_min.each([](iige::transform& transform, const iige::angle::deg constraint) { transform.orientation.value = std::max(transform.orientation.value, constraint.value); });
-			angle_max.each([](iige::transform& transform, const iige::angle::deg constraint) { transform.orientation.value = std::min(transform.orientation.value, constraint.value); });
-			scale_min.each([](iige::transform& transform, const float            constraint) { transform.size = std::max(transform.size, constraint); });
-			scale_max.each([](iige::transform& transform, const float            constraint) { transform.size = std::min(transform.size, constraint); });
+			    x_min.each([](iige::transform& transform, const float&            constraint) { transform.position.x        = std::max(transform.position.x, constraint); });
+			    x_max.each([](iige::transform& transform, const float&            constraint) { transform.position.x        = std::min(transform.position.x, constraint); });
+			    y_min.each([](iige::transform& transform, const float&            constraint) { transform.position.y        = std::max(transform.position.y, constraint); });
+			    y_max.each([](iige::transform& transform, const float&            constraint) { transform.position.y        = std::min(transform.position.y, constraint); });
+			angle_min.each([](iige::transform& transform, const iige::angle::deg& constraint) { transform.orientation.value = std::max(transform.orientation.value, constraint.value); });
+			angle_max.each([](iige::transform& transform, const iige::angle::deg& constraint) { transform.orientation.value = std::min(transform.orientation.value, constraint.value); });
+			scale_min.each([](iige::transform& transform, const float&            constraint) { transform.size              = std::max(transform.size, constraint); });
+			scale_max.each([](iige::transform& transform, const float&            constraint) { transform.size              = std::min(transform.size, constraint); });
 			}
 		}
 

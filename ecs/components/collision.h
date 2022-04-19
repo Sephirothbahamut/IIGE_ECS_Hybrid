@@ -54,6 +54,7 @@
 
 namespace iige::ecs::components
 	{
+	using namespace entt::literals;
 
 #pragma region Collider types related stuff
 	namespace colliders
@@ -64,13 +65,13 @@ namespace iige::ecs::components
 		namespace details
 			{
 			template <is_discrete_collider T>
-			using source = component<typename T::value_type, 1, false>;
+			using source = component<typename T::value_type, "collider_source"_hs, false>;
 
 			template <utils::math::geometry::shape_discrete discrete_shape_t>
-			struct discrete_collider : component<discrete_shape_t, 0, true>
+			struct discrete_collider : component<discrete_shape_t, "collider"_hs, true>
 				{
-				using component<discrete_shape_t, 0, true>::component;
-				using discrete_source = source<component<discrete_shape_t, 0, true>>;
+				using component<discrete_shape_t, "collider"_hs, true>::component;
+				using discrete_source = source<component<discrete_shape_t, "collider"_hs, true>>;
 				};
 			}
 
@@ -84,10 +85,10 @@ namespace iige::ecs::components
 		namespace details
 			{
 			template <utils::math::geometry::shape_continuous continuous_shape_t, typename discrete_shape_t>
-			struct continuous_collider : component<continuous_shape_t, 0, true>
+			struct continuous_collider : component<continuous_shape_t, "collider"_hs, true>
 				{
-				using component<continuous_shape_t, 0, true>::component;
-				using discrete_source = source<component<discrete_shape_t, 0, true>>;
+				using component<continuous_shape_t, "collider"_hs, true>::component;
+				using discrete_source = source<component<discrete_shape_t, "collider"_hs, true>>;
 				};
 			}
 
