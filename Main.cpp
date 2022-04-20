@@ -29,7 +29,7 @@ int main()
 	
 	iige::Scene scene;
 	
-	utils::math::transform2 t{.position{200.f, 150.f}, .orientation{}};
+	utils::math::transform2 t{.translation{200.f, 150.f}, .rotation{}};
 
 	std::random_device rd;
 	std::mt19937 mt{static_cast<long unsigned int>(0)};
@@ -76,7 +76,7 @@ int main()
 				iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::shapes::point{0, 0});
 				{
 				auto& speed{scene.ecs_registry.get<iige::ecs::components::speed>(entity)};
-				//speed.value().position.x *= 10;
+				//speed.value().translation.x *= 10;
 				}
 				break;
 			}
@@ -148,12 +148,12 @@ int main()
 			{
 			using namespace utils::math::operators;
 			
-			auto new_speed_position{s.position - cdata.data.normal * 2.f * (s.position <dot> cdata.data.normal)};
+			auto new_speed_position{s.translation - cdata.data.normal * 2.f * (s.translation <dot> cdata.data.normal)};
 
-			next.position = cdata.data.impact_point + new_speed_position * (1 - cdata.data.t) * delta_time;
+			next.translation = cdata.data.impact_point + new_speed_position * (1 - cdata.data.t) * delta_time;
 
 
-			s.position = new_speed_position;
+			s.translation = new_speed_position;
 			});
 		});*/
 
@@ -164,10 +164,10 @@ int main()
 
 		view.each([&](const iige::transform& t, iige::transform& s)
 			{
-			if (t.position.x < 0 && s.position.x < 0) { s.position.x *= -1; }
-			if (t.position.y < 0 && s.position.y < 0) { s.position.y *= -1; }
-			if (t.position.x > window.sf_window.getSize().x && s.position.x > 0) { s.position.x *= -1; }
-			if (t.position.y > window.sf_window.getSize().y && s.position.y > 0) { s.position.y *= -1; }
+			if (t.translation.x < 0 && s.translation.x < 0) { s.translation.x *= -1; }
+			if (t.translation.y < 0 && s.translation.y < 0) { s.translation.y *= -1; }
+			if (t.translation.x > window.sf_window.getSize().x && s.translation.x > 0) { s.translation.x *= -1; }
+			if (t.translation.y > window.sf_window.getSize().y && s.translation.y > 0) { s.translation.y *= -1; }
 			});
 		});
 	

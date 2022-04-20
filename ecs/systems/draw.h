@@ -16,8 +16,8 @@ namespace iige::ecs::systems
 
 		movement_view.each([&](const iige::transform& transform, auto& drawable)
 			{
-			drawable.cs.setPosition(utils::math::vec_cast<sf::Vector2, float>(transform.position));
-			drawable.cs.setRotation(transform.orientation.value);
+			drawable.cs.setPosition(utils::math::vec_cast<sf::Vector2, float>(transform.translation));
+			drawable.cs.setRotation(transform.rotation.value);
 			window.draw(drawable.cs);
 			});
 		}
