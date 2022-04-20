@@ -21,10 +21,10 @@ namespace iige::ecs::systems
 		{
 		if constexpr (components::colliders::is_discrete_collider<collider_t>)
 			{
-			auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::details::source<collider_t>, collider_t, components::colliders::aabb>()};
+			auto moving_colliders_view{scene.ecs_registry.view<components::transform, collider_t::discrete_source, collider_t, components::colliders::aabb>()};
 
 			using namespace iige::shapes::transformations;
-			moving_colliders_view.each([](const iige::transform& transform, const components::colliders::details::source<collider_t>& collider_source, collider_t& collider, components::colliders::aabb& aabb)
+			moving_colliders_view.each([](const iige::transform& transform, const collider_t::discrete_source& collider_source, collider_t& collider, components::colliders::aabb& aabb)
 				{
 				using namespace iige::ecs::components;//TODO check if necessary
 				collider.value() = collider_source.value() * transform;
@@ -52,10 +52,10 @@ namespace iige::ecs::systems
 	template <>
 	void move_colliders<components::colliders::aabb>(iige::Scene& scene)
 		{
-		auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::details::source<components::colliders::aabb>, components::colliders::aabb>()};
+		auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::aabb::discrete_source, components::colliders::aabb>()};
 
 		using namespace iige::shapes::transformations;
-		moving_colliders_view.each([](const iige::transform& transform, const components::colliders::details::source<components::colliders::aabb>& collider_source, components::colliders::aabb& collider)
+		moving_colliders_view.each([](const iige::transform& transform, const components::colliders::aabb::discrete_source& collider_source, components::colliders::aabb& collider)
 			{
 			using namespace iige::ecs::components;
 			collider.value() = collider_source.value() * transform;

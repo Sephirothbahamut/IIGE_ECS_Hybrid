@@ -81,6 +81,7 @@ int main()
 				break;
 			}
 
+		scene.ecs_registry.emplace<iige::ecs::components::transform::x_min>(entity, 256.f);
 		scene.ecs_registry.emplace<iige::ecs::components::speed::x_max>(entity, 10.f);
 		iige::ecs::components::add_acceleration(scene.ecs_registry, entity, {{-.5f, 0.f}, 0.f, 0.f});
 
@@ -135,7 +136,7 @@ int main()
 
 	iige::ecs::systems::collision_impl<1> collision;
 	
-	iige::loop::variable_fps_and_game_speed loop{scene, window, collision};
+	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 10};
 
 
 	//Entities bouncing system

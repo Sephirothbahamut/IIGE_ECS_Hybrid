@@ -60,18 +60,18 @@ namespace iige::ecs::components
 	namespace colliders
 		{
 		template <typename T>
-		concept is_discrete_collider = utils::math::geometry::shape_discrete<typename T::value_type>;
+		concept is_discrete_collider = iige::shapes::shape_discrete<typename T::value_type>;
 
 		namespace details
 			{
-			template <is_discrete_collider T>
-			using source = component<typename T::value_type, "collider_source"_hs, false>;
-
-			template <utils::math::geometry::shape_discrete discrete_shape_t>
+			template <iige::shapes::shape_discrete T>
+			using source = component<T, "collider_source"_hs, false>;
+			
+			template <iige::shapes::shape_discrete discrete_shape_t>
 			struct discrete_collider : component<discrete_shape_t, "collider"_hs, true>
 				{
 				using component<discrete_shape_t, "collider"_hs, true>::component;
-				using discrete_source = source<component<discrete_shape_t, "collider"_hs, true>>;
+				using discrete_source = source<discrete_shape_t>;
 				};
 			}
 
@@ -82,20 +82,23 @@ namespace iige::ecs::components
 		using  polygon        = details::discrete_collider<iige::shapes::polygon       >;
 		using  convex_polygon = details::discrete_collider<iige::shapes::convex_polygon>;
 
+		polygon::discrete_source a;
+
 		namespace details
 			{
-			template <utils::math::geometry::shape_continuous continuous_shape_t, typename discrete_shape_t>
+			template <iige::shapes::shape_continuous continuous_shape_t, typename discrete_shape_t>
 			struct continuous_collider : component<continuous_shape_t, "collider"_hs, true>
 				{
 				using component<continuous_shape_t, "collider"_hs, true>::component;
-				using discrete_source = source<component<discrete_shape_t, "collider"_hs, true>>;
+				using discrete_source = source<discrete_shape_t>;
 				};
 			}
 
-		using continuous_point = details::continuous_collider<utils::math::geometry::continuous_point, iige::shapes::point>;
+
+		using continuous_point = details::continuous_collider<iige::shapes::continuous_point, iige::shapes::point>;
 		
 		template <typename T>
-		concept is_continuous_collider = utils::math::geometry::shape_continuous<typename T::value_type>;
+		concept is_continuous_collider = iige::shapes::shape_continuous<typename T::value_type>;
 
 		template <typename T>
 		concept is_collider = is_discrete_collider<T> || is_continuous_collider<T>;
@@ -150,7 +153,7 @@ namespace iige::ecs::components
 			{
 			if constexpr (colliders::is_discrete_collider<collider_t>)
 				{
-				utils::discard(registry.get_or_emplace<colliders::details::source<collider_t>>(entity, std::forward<Args>(args)...));
+				utils::discard(registry.get_or_emplace<typename collider_t::discrete_source>(entity, std::forward<Args>(args)...));
 				}
 			else if constexpr (colliders::is_continuous_collider<collider_t>)
 				{
@@ -162,16 +165,8 @@ namespace iige::ecs::components
 	template <colliders::is_collider collider_t>
 	inline void remove_collider(entt::registry& registry, entt::entity entity)
 		{
-		if constexpr (colliders::is_discrete_collider<collider_t>)
-			{
-			if (registry.all_of<                           collider_t >) { registry.remove<                           collider_t >(entity); }
-			if (registry.all_of<colliders::details::source<collider_t>>) { registry.remove<colliders::details::source<collider_t>>(entity); }
-			}
-		else if constexpr (colliders::is_continuous_collider<collider_t>)
-			{
-			if (registry.all_of<         collider_t                 >) { registry.remove<         collider_t                 >(entity); }
-			if (registry.all_of<typename collider_t::discrete_source>) { registry.remove<typename collider_t::discrete_source>(entity); }
-			}
+		if (registry.all_of<         collider_t                 >) { registry.remove<         collider_t                 >(entity); }
+		if (registry.all_of<typename collider_t::discrete_source>) { registry.remove<typename collider_t::discrete_source>(entity); }
 		}
 
 
