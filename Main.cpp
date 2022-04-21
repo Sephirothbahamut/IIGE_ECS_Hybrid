@@ -123,7 +123,7 @@ int main()
 			auto entity{scene.ecs_registry.create()};
 
 			iige::ecs::components::in_world(scene.ecs_registry, entity, utils::math::transform2{utils::math::vec2f{window.sf_window.getSize().x / 2.f + 128, window.sf_window.getSize().y / 2.f + 128}});
-			iige::ecs::components::add_movement(scene.ecs_registry, entity, utils::math::transform2{utils::math::vec2f{80, 35}});
+			iige::ecs::components::add_movement(scene.ecs_registry, entity, utils::math::transform2{utils::math::vec2f{380, 0}});
 
 			int collider_type{distribution(mt)};
 			iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::shapes::point{0, 0});
