@@ -25,6 +25,10 @@ namespace iige::shapes
 		return utils::math::geometry::collides(std::forward<Args>(args)...);
 		}
 	template <typename ... Args>
+	auto continuous_collides(Args&& ... args) {
+		return utils::math::geometry::continuous_collides(std::forward<Args>(args)...);
+	}
+	template <typename ... Args>
 	auto contains(Args&& ... args) {
 		return utils::math::geometry::contains(std::forward<Args>(args)...);
 		}
