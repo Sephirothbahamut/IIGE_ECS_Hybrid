@@ -65,7 +65,7 @@ namespace iige::ecs::components
 		namespace details
 			{
 			template <iige::shapes::shape_discrete T>
-			using source = component<T, "collider_source"_hs, false>;
+			using source = component<T, "collider_source"_hs, true>;
 			
 			template <iige::shapes::shape_discrete discrete_shape_t>
 			struct discrete_collider : component<discrete_shape_t, "collider"_hs, true>
@@ -142,7 +142,7 @@ namespace iige::ecs::components
 		using namespace iige::shapes::transformations;
 
 		auto& current_collider{registry.get_or_emplace<collider_t>(entity)};
-		auto& current_collider_ptr{registry.get_or_emplace<colliders::details::ptr>(entity, static_cast<collider_t*>(&current_collider))};
+		auto& current_collider_ptr{registry.emplace_or_replace<colliders::details::ptr>(entity, static_cast<collider_t*>(&current_collider))};
 
 		if constexpr (!std::is_same_v<collider_t, colliders::aabb>)
 			{
@@ -151,29 +151,24 @@ namespace iige::ecs::components
 
 		if constexpr (!is_static)
 			{
-			if constexpr (colliders::is_discrete_collider<collider_t>)
-				{
-				utils::discard(registry.get_or_emplace<typename collider_t::discrete_source>(entity, std::forward<Args>(args)...));
-				}
-			else if constexpr (colliders::is_continuous_collider<collider_t>)
-				{
-				utils::discard(registry.get_or_emplace<typename collider_t::discrete_source>(entity, std::forward<Args>(args)...));
-				}
+			utils::discard(registry.get_or_emplace<typename collider_t::discrete_source>(entity, std::forward<Args>(args)...));
 			}
 		}
 
 	template <colliders::is_collider collider_t>
 	inline void remove_collider(entt::registry& registry, entt::entity entity)
 		{
-		if (registry.all_of<         collider_t                 >) { registry.remove<         collider_t                 >(entity); }
-		if (registry.all_of<typename collider_t::discrete_source>) { registry.remove<typename collider_t::discrete_source>(entity); }
+		if (registry.all_of<         collider_t                 >(entity)) {
+			registry.remove<         collider_t                 >(entity); }
+		if (registry.all_of<typename collider_t::discrete_source>(entity)) { 
+			registry.remove<typename collider_t::discrete_source>(entity); }
 		}
 
 
 	template <colliders::is_collider candidate, colliders::is_collider filter>
 	inline void remove_if_not(entt::registry& registry, entt::entity entity)
 		{
-		if constexpr (!std::is_same<candidate, filter>)
+		if constexpr (!std::is_same_v<candidate, filter>)
 			{
 			remove_collider<candidate>(registry, entity);
 			}
@@ -186,19 +181,20 @@ namespace iige::ecs::components
 			{
 			if constexpr (!is_static) 
 				{
-				if (registry.all_of<colliders::details::source<collider_t>>(entity)) { return; }
+				if (registry.all_of<collider_t::discrete_source>(entity)) { return; }
 				}
 			else { return; }
 			}
-
+		
 		remove_if_not<colliders::point           , collider_t>(registry, entity);
 		remove_if_not<colliders::segment         , collider_t>(registry, entity);
+		remove_if_not<colliders::aabb            , collider_t>(registry, entity);
 		remove_if_not<colliders::circle          , collider_t>(registry, entity);
 		remove_if_not<colliders::polygon         , collider_t>(registry, entity);
 		remove_if_not<colliders::convex_polygon  , collider_t>(registry, entity);
 		remove_if_not<colliders::continuous_point, collider_t>(registry, entity);
 		
-		add_collision<collider_t, is_static, Args...>(registry, entity, std::forward(args)...);
+		add_collision<collider_t, is_static>(registry, entity, std::forward<Args>(args)...);
 		}
 
 	}

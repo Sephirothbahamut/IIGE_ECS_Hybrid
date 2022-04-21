@@ -114,6 +114,7 @@ namespace iige::ecs::systems
 			transform      = transform_next;
 			transform_prev = transform;
 			transform_next += speed * delta_time;
+			std::cout << "pippo";
 			});
 
 		details::apply_constraints<components::transform_next, components::transform>(scene);
