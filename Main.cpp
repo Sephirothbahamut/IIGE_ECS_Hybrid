@@ -118,7 +118,7 @@ int main()
 			int collider_type{distribution(mt)};
 			iige::ecs::components::add_collision<iige::ecs::components::colliders::aabb>(scene.ecs_registry, entity, iige::shapes::aabb  {.ll{-256}, .up{-256}, .rr{256}, .dw{256}});
 			outer = iige::shapes::circle{ {0, 0}, 256.f };
-			iige::ecs::components::add_or_replace_collision<iige::ecs::components::colliders::circle>(scene.ecs_registry, entity, outer);
+			iige::ecs::components::add_or_replace_collision<iige::ecs::components::colliders::hollow_circle>(scene.ecs_registry, entity, outer);
 			//iige::ecs::components::add_collision<iige::ecs::components::colliders::circle>(scene.ecs_registry, entity, iige::shapes::circle{{0, 0}, 256.f});
 			using namespace iige::shapes::transformations;
 			outer *= transform;
@@ -140,8 +140,6 @@ int main()
 		if (true)
 			{// Bouncy projectile
 			auto entity{scene.ecs_registry.create()};
-
-
 
 			iige::ecs::components::in_world(scene.ecs_registry, entity, utils::math::transform2{utils::math::vec2f{window.sf_window.getSize().x / 2.f + 128, window.sf_window.getSize().y / 2.f + 128}});
 			iige::ecs::components::add_movement(scene.ecs_registry, entity, utils::math::transform2{utils::math::vec2f{80, 5}});
@@ -178,7 +176,7 @@ int main()
 
 	iige::ecs::systems::collision_impl<1> collision;
 	
-	iige::loop::fixed_fps_and_game_speed loop{scene, window, collision, 10};
+	iige::loop::variable_fps_and_game_speed loop{scene, window, collision, /*10*/};
 
 
 	//Entities bouncing system
@@ -193,8 +191,7 @@ int main()
 			auto new_speed_position{s.translation - cdata.data.normal * 2.f * (s.translation <dot> cdata.data.normal)};
 
 			next.translation = cdata.data.impact_point + new_speed_position * (1 - cdata.data.t) * delta_time;
-
-
+			
 			s.translation = new_speed_position;
 			});
 		});

@@ -91,8 +91,6 @@ namespace iige::ecs::systems
 
 	inline void move(iige::Scene& scene, float delta_time)
 		{
-
-
 		details::apply_constraints<components::acceleration>(scene);
 		auto accelerate_view{scene.ecs_registry.view<components::speed, components::acceleration>()};
 		accelerate_view.each([&](iige::transform& speed, const iige::transform& acceleration) { speed += acceleration * delta_time; });
@@ -114,18 +112,21 @@ namespace iige::ecs::systems
 			transform      = transform_next;
 			transform_prev = transform;
 			transform_next += speed * delta_time;
-			//std::cout << "pippo";
 			});
 
 		details::apply_constraints<components::transform_next, components::transform>(scene);
 
-		move_colliders<components::colliders::point           >(scene);
-		move_colliders<components::colliders::segment         >(scene);
-		move_colliders<components::colliders::aabb            >(scene);
-		move_colliders<components::colliders::circle          >(scene);
-		move_colliders<components::colliders::polygon         >(scene);
-		move_colliders<components::colliders::convex_polygon  >(scene);
-		move_colliders<components::colliders::continuous_point>(scene);
+		move_colliders<components::colliders::point                >(scene);
+		move_colliders<components::colliders::segment              >(scene);
+		move_colliders<components::colliders::aabb                 >(scene);
+		move_colliders<components::colliders::circle               >(scene);
+		move_colliders<components::colliders::polygon              >(scene);
+		move_colliders<components::colliders::convex_polygon       >(scene);
+		move_colliders<components::colliders::hollow_aabb          >(scene);
+		move_colliders<components::colliders::hollow_circle        >(scene);
+		move_colliders<components::colliders::hollow_polygon       >(scene);
+		move_colliders<components::colliders::hollow_convex_polygon>(scene);
+		move_colliders<components::colliders::continuous_point     >(scene);
 		}
 
 	inline void interpolate(iige::Scene& scene, float interpolation)

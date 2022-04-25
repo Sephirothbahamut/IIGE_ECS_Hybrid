@@ -53,12 +53,12 @@ namespace iige
 						ecs::systems::interpolate(scene, interpolation);
 						ecs::systems::draw(scene, window.sf_window);
 						window.sf_window.draw(colliders_vertex_array);
-
+						
 						for (const auto& draw_system : draw_systems)
 							{
 							draw_system(scene, window, delta_time, interpolation);
 							}
-
+						
 						window.sf_window.display();
 						}
 

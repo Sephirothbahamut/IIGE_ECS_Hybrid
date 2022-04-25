@@ -6,7 +6,9 @@
 
 namespace iige::shapes
 	{
-	using aabb                 = utils::math::geometry::aabb;
+	using namespace utils::math::geometry;
+
+	/*using aabb                 = utils::math::geometry::aabb;
 	using circle               = utils::math::geometry::circle;
 	using point                = utils::math::geometry::point;
 	using polygon              = utils::math::geometry::polygon;
@@ -28,12 +30,12 @@ namespace iige::shapes
 	auto continuous_collides(Args&& ... args) {
 		return utils::math::geometry::continuous_collides(std::forward<Args>(args)...);
 	}
-	template <typename ... Args>
+	template <bool a_hollow = false, bool b_hollow = false, typename ... Args>
 	auto contains(Args&& ... args) {
-		return utils::math::geometry::contains(std::forward<Args>(args)...);
+		return utils::math::geometry::contains<a_hollow, b_hollow>(std::forward<Args>(args)...);
 		}
 	template <typename ... Args>
 	auto intersects(Args&& ... args) {
 		return utils::math::geometry::intersects(std::forward<Args>(args)...);
-		}
+		}*/
 	}

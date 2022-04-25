@@ -67,33 +67,36 @@ namespace iige::ecs::components
 			template <iige::shapes::shape_discrete T>
 			using source = component<T, "collider_source"_hs, true>;
 			
-			template <iige::shapes::shape_discrete discrete_shape_t>
+			template <iige::shapes::shape_discrete discrete_shape_t, bool is_hollow = false>
 			struct discrete_collider : component<discrete_shape_t, "collider"_hs, true>
 				{
 				using component<discrete_shape_t, "collider"_hs, true>::component;
 				using discrete_source = source<discrete_shape_t>;
+				inline static constexpr bool hollow = is_hollow;
 				};
 			}
 
-		using  point          = details::discrete_collider<iige::shapes::point         >;
-		using  segment        = details::discrete_collider<iige::shapes::segment       >;
-		using  aabb           = details::discrete_collider<iige::shapes::aabb          >;
-		using  circle         = details::discrete_collider<iige::shapes::circle        >;
-		using  polygon        = details::discrete_collider<iige::shapes::polygon       >;
-		using  convex_polygon = details::discrete_collider<iige::shapes::convex_polygon>;
-
-		polygon::discrete_source a;
+		using point                 = details::discrete_collider<iige::shapes::point         , false>;
+		using segment               = details::discrete_collider<iige::shapes::segment       , false>;
+		using aabb                  = details::discrete_collider<iige::shapes::aabb          , false>;
+		using circle                = details::discrete_collider<iige::shapes::circle        , false>;
+		using polygon               = details::discrete_collider<iige::shapes::polygon       , false>;
+		using convex_polygon        = details::discrete_collider<iige::shapes::convex_polygon, false>;
+		using hollow_aabb           = details::discrete_collider<iige::shapes::aabb          , true >;
+		using hollow_circle         = details::discrete_collider<iige::shapes::circle        , true >;
+		using hollow_polygon        = details::discrete_collider<iige::shapes::polygon       , true >;
+		using hollow_convex_polygon = details::discrete_collider<iige::shapes::convex_polygon, true >;
 
 		namespace details
 			{
-			template <iige::shapes::shape_continuous continuous_shape_t, typename discrete_shape_t>
+			template <iige::shapes::shape_continuous continuous_shape_t, typename discrete_shape_t, bool is_hollow = false>
 			struct continuous_collider : component<continuous_shape_t, "collider"_hs, true>
 				{
 				using component<continuous_shape_t, "collider"_hs, true>::component;
 				using discrete_source = source<discrete_shape_t>;
+				inline static constexpr bool hollow = is_hollow;
 				};
 			}
-
 
 		using continuous_point = details::continuous_collider<iige::shapes::continuous_point, iige::shapes::point>;
 		
@@ -106,7 +109,24 @@ namespace iige::ecs::components
 		namespace details
 			{
 			//TODO ptr must have "hollow" boolean. If true discrete-discrete(hollow) collision checks only intersects, while continue-discrete(hollow) still check collides for the "inside" boolean to pass to the continuous check, but if hollow it won't add the discrete collided with component.
-			using ptr   = std::variant<point*, segment*, aabb*, circle*, polygon*, convex_polygon*, continuous_point*>;
+			using ptr   = std::variant
+				<
+				// Base
+				utils::observer_ptr<point>, 
+				utils::observer_ptr<segment>, 
+				utils::observer_ptr<aabb>, 
+				utils::observer_ptr<circle>, 
+				utils::observer_ptr<polygon>, 
+				utils::observer_ptr<convex_polygon>,
+				// Hollow
+				utils::observer_ptr<hollow_aabb>,
+				utils::observer_ptr<hollow_circle>, 
+				utils::observer_ptr<hollow_polygon>, 
+				utils::observer_ptr<hollow_convex_polygon>,
+				// Continuous
+				utils::observer_ptr<continuous_point>
+				// Continuous hollow
+				>;
 			}
 		}
 
@@ -186,13 +206,17 @@ namespace iige::ecs::components
 			else { return; }
 			}
 		
-		remove_if_not<colliders::point           , collider_t>(registry, entity);
-		remove_if_not<colliders::segment         , collider_t>(registry, entity);
-		remove_if_not<colliders::aabb            , collider_t>(registry, entity);
-		remove_if_not<colliders::circle          , collider_t>(registry, entity);
-		remove_if_not<colliders::polygon         , collider_t>(registry, entity);
-		remove_if_not<colliders::convex_polygon  , collider_t>(registry, entity);
-		remove_if_not<colliders::continuous_point, collider_t>(registry, entity);
+		remove_if_not<colliders::point                , collider_t>(registry, entity);
+		remove_if_not<colliders::segment              , collider_t>(registry, entity);
+		remove_if_not<colliders::aabb                 , collider_t>(registry, entity);
+		remove_if_not<colliders::circle               , collider_t>(registry, entity);
+		remove_if_not<colliders::polygon              , collider_t>(registry, entity);
+		remove_if_not<colliders::convex_polygon       , collider_t>(registry, entity);
+		remove_if_not<colliders::hollow_aabb          , collider_t>(registry, entity);
+		remove_if_not<colliders::hollow_circle        , collider_t>(registry, entity);
+		remove_if_not<colliders::hollow_polygon       , collider_t>(registry, entity);
+		remove_if_not<colliders::hollow_convex_polygon, collider_t>(registry, entity);
+		remove_if_not<colliders::continuous_point     , collider_t>(registry, entity);
 		
 		add_collision<collider_t, is_static>(registry, entity, std::forward<Args>(args)...);
 		}

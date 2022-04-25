@@ -37,28 +37,37 @@ namespace iige::ecs::components
 			};
 		}
 
-	using transform      = details::transform_component<"transform"_hs>;
-	using transform_next = details::transform_component<"transform_next"_hs>;
-	using transform_prev = details::transform_component<"transform_prev"_hs>;
-	using speed          = details::transform_component<"speed"_hs>;
-	using acceleration   = details::transform_component<"acceleration"_hs>;
+	namespace relative
+		{
+		using transform      = details::transform_component      <"relative_transform"_hs>;
+		using transform_next = component<utils::math::transform2, "relative_transform_next"_hs>;
+		using transform_prev = component<utils::math::transform2, "relative_transform_prev"_hs>;
+		}
+	namespace absolute
+		{
+		using transform      = details::transform_component      <"absolute_transform"_hs>;
+		using transform_next = component<utils::math::transform2, "absolute_transform_next"_hs>;
+		using transform_prev = component<utils::math::transform2, "absolute_transform_prev"_hs>;
+		}
+	using speed        = details::transform_component<"speed"_hs>;
+	using acceleration = details::transform_component<"acceleration"_hs>;
 
 	inline void in_world(entt::registry& registry, entt::entity entity, iige::transform transform = {})
 		{
-		const auto& current_transform{registry.get_or_emplace<components::transform>(entity, transform)};
+		const auto& current_transform{registry.get_or_emplace<components::absolute::transform>(entity, transform)};
 		}
 	inline void add_movement(entt::registry& registry, entt::entity entity, iige::transform speed = utils::math::transform2::zero(), iige::transform transform = {})
 		{
-		const auto& current_transform{registry.get_or_emplace<components::transform>(entity, transform)};
-		utils::discard(registry.get_or_emplace<transform_next>(entity, current_transform.value()));
-		utils::discard(registry.get_or_emplace<transform_prev>(entity, current_transform.value()));
+		const auto& current_transform{registry.get_or_emplace<components::absolute::transform>(entity, transform)};
+		utils::discard(registry.get_or_emplace<absolute::transform_next>(entity, current_transform.value()));
+		utils::discard(registry.get_or_emplace<absolute::transform_prev>(entity, current_transform.value()));
 		utils::discard(registry.get_or_emplace<components::speed>(entity, speed));
 		}
 	inline void add_acceleration(entt::registry& registry, entt::entity entity, iige::transform acceleration = iige::transform::zero(), iige::transform speed = iige::transform::zero(), iige::transform transform = {})
 		{
-		const auto& current_transform{registry.get_or_emplace<components::transform>(entity, transform)};
-		utils::discard(registry.get_or_emplace<transform_next>(entity, current_transform.value()));
-		utils::discard(registry.get_or_emplace<transform_prev>(entity, current_transform.value()));
+		const auto& current_transform{registry.get_or_emplace<components::absolute::transform>(entity, transform)};
+		utils::discard(registry.get_or_emplace<absolute::transform_next>(entity, current_transform.value()));
+		utils::discard(registry.get_or_emplace<absolute::transform_prev>(entity, current_transform.value()));
 		utils::discard(registry.get_or_emplace<components::speed       >(entity, speed));
 		utils::discard(registry.get_or_emplace<components::acceleration>(entity, acceleration));
 		}
