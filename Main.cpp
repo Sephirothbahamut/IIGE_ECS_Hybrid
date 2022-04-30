@@ -54,19 +54,39 @@ int main()
 	std::uniform_real_distribution<float> angle_distribution   {  0,  360};
 	std::uniform_real_distribution<float> rotation_distribution{-10,   10};
 	std::uniform_real_distribution<float> speed_distribution   {-100, 100};
-	/*
+	
 	for (size_t i = 0; i < 800; i++)
 		{
 		auto entity{scene.ecs_registry.create()};
 
-		utils::math::vec2f       position{x_distribution(mt), y_distribution(mt)};
-		utils::math::angle::deg  angle   {angle_distribution(mt)};
-		utils::math::vec2f       speed   {speed_distribution(mt), speed_distribution (mt)};
-		utils::math::angle::deg  rotation{rotation_distribution(mt)};
+		iige::vec2f       position{x_distribution(mt), y_distribution(mt)};
+		iige::angle::rad  angle   {angle_distribution(mt)};
+		iige::vec2f       speed   {speed_distribution(mt), speed_distribution (mt)};
+		iige::angle::rad  rotation{rotation_distribution(mt)};
 
-		iige::ecs::components::add_movement(scene.ecs_registry, entity, {speed, rotation, 0.f}, {position, angle});
-		
-		int collider_type{ 6 };//distribution(mt)};
+		iige::ecs::components::transform::absolute::x::min m;
+
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::x>(entity, position.x);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::y>(entity, position.y);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::x>(entity, position.x);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::y>(entity, position.y);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::angle>(entity, angle);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::angle>(entity, angle);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::scale>(entity, 1.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::scale>(entity, 1.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed::x>(entity, speed.x);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed::y>(entity, speed.y);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed::angle>(entity, rotation);
+		//scene.ecs_registry.emplace<iige::ecs::components::transform::speed::scale>(entity, 0.f);
+
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute    ::x::min>(entity, 256.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed       ::x::max>(entity,  10.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::acceleration::x     >(entity,  -5.f);
+
+		scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity);
+		scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
+
+		int collider_type{distribution(mt)};
 		switch (collider_type)
 			{
 			case 0:
@@ -90,20 +110,13 @@ int main()
 			case 6:
 				iige::ecs::components::add_collision<iige::ecs::components::colliders::continuous_point>(scene.ecs_registry, entity, iige::shapes::point{0, 0});
 				{
-				auto& speed{scene.ecs_registry.get<iige::ecs::components::speed>(entity)};
-				//speed.value().translation.x *= 10;
+				//auto& speed_x{scene.ecs_registry.get<iige::ecs::components::transform::speed::x>(entity)};
+				//auto& speed_y{scene.ecs_registry.get<iige::ecs::components::transform::speed::y>(entity)};
+				//speed_x.value() *= 10.f;
+				//speed_y.value() *= 10.f;
 				}
 				break;
 			}
-
-		scene.ecs_registry.emplace<iige::ecs::components::transform::x_min>(entity, 256.f);
-		scene.ecs_registry.emplace<iige::ecs::components::speed::x_max>(entity, 10.f);
-		iige::ecs::components::add_acceleration(scene.ecs_registry, entity, {{-.5f, 0.f}, 0.f, 0.f});
-
-		scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity);
-		scene.ecs_registry.emplace<iige::ecs::components::collides_with<0>>(entity);
-	
-		//scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity, 32.f);
 		}
 	/*/
 	for (size_t i = 0; i < 1; i++)
@@ -175,38 +188,54 @@ int main()
 	/**/
 
 	iige::ecs::systems::collision_impl<1> collision;
-	
-	iige::loop::variable_fps_and_game_speed loop{scene, window, collision, /*10*/};
+
+	iige::loop::variable_fps_and_game_speed loop{scene, window, collision};/*/
+	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 10};/**/
 
 
 	//Entities bouncing system
 	loop.step_systems.emplace_back([&](iige::Scene& scene, iige::Window& window, float delta_time)
 		{
-		auto view{scene.ecs_registry.view<iige::ecs::components::collision_data, iige::ecs::components::speed, iige::ecs::components::transform_next>()};
+		auto view{scene.ecs_registry.view<
+			iige::ecs::components::collision_data,
+			iige::ecs::components::transform::speed         ::x, iige::ecs::components::transform::speed         ::y,
+			iige::ecs::components::transform::absolute::next::x, iige::ecs::components::transform::absolute::next::y
+			>()};
 
-		view.each([&](const iige::ecs::components::collision_data& cdata, iige::transform& s, iige::transform& next)
+		view.each([&](const iige::ecs::components::collision_data& cdata, float& speed_x, float& speed_y, float& next_x, float& next_y)
 			{
 			using namespace utils::math::operators;
 			
-			auto new_speed_position{s.translation - cdata.data.normal * 2.f * (s.translation <dot> cdata.data.normal)};
+			iige::vec2f speed{speed_x, speed_y};
 
-			next.translation = cdata.data.impact_point + new_speed_position * (1 - cdata.data.t) * delta_time;
-			
-			s.translation = new_speed_position;
+			speed = speed - cdata.data.normal * 2.f * (speed <dot> cdata.data.normal);
+
+			iige::vec2f next{cdata.data.impact_point + speed * (1 - cdata.data.t) * delta_time};
+
+			speed_x = speed.x;
+			speed_y = speed.y;
+			 next_x = next .x;
+			 next_y = next .y;
 			});
 		});
 
 	//Window wall bouncing system
 	loop.step_systems.emplace_back([&](iige::Scene& scene, iige::Window& window, float)
 		{
-		auto view{scene.ecs_registry.view<iige::ecs::components::transform, iige::ecs::components::speed>()};
+		auto view_x{scene.ecs_registry.view<iige::ecs::components::transform::absolute::x, iige::ecs::components::transform::speed::x>()};
 
-		view.each([&](const iige::transform& t, iige::transform& s)
+		view_x.each([&](const float& x, float& speed_x)
 			{
-			if (t.translation.x < 0 && s.translation.x < 0) { s.translation.x *= -1; }
-			if (t.translation.y < 0 && s.translation.y < 0) { s.translation.y *= -1; }
-			if (t.translation.x > window.sf_window.getSize().x && s.translation.x > 0) { s.translation.x *= -1; }
-			if (t.translation.y > window.sf_window.getSize().y && s.translation.y > 0) { s.translation.y *= -1; }
+			if (x < 0 && speed_x < 0) { speed_x *= -1; }
+			if (x > window.sf_window.getSize().x && speed_x > 0) { speed_x *= -1; }
+			});
+
+		auto view_y{scene.ecs_registry.view<iige::ecs::components::transform::absolute::y, iige::ecs::components::transform::speed::y>()};
+
+		view_y.each([&](const float& y, float& speed_y)
+			{
+			if (y < 0 && speed_y < 0) { speed_y *= -1; }
+			if (y > window.sf_window.getSize().y && speed_y > 0) { speed_y *= -1; }
 			});
 		});
 	

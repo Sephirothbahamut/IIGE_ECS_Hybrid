@@ -54,7 +54,6 @@
 
 namespace iige::ecs::components
 	{
-	using namespace entt::literals;
 
 #pragma region Collider types related stuff
 	namespace colliders
@@ -65,12 +64,12 @@ namespace iige::ecs::components
 		namespace details
 			{
 			template <iige::shapes::shape_discrete T>
-			using source = component<T, "collider_source"_hs, true>;
+			using source = component<T, "collider_source", true>;
 			
 			template <iige::shapes::shape_discrete discrete_shape_t, bool is_hollow = false>
-			struct discrete_collider : component<discrete_shape_t, "collider"_hs, true>
+			struct discrete_collider : component<discrete_shape_t, "collider", true>
 				{
-				using component<discrete_shape_t, "collider"_hs, true>::component;
+				using component<discrete_shape_t, "collider", true>::component;
 				using discrete_source = source<discrete_shape_t>;
 				inline static constexpr bool hollow = is_hollow;
 				};
@@ -90,9 +89,9 @@ namespace iige::ecs::components
 		namespace details
 			{
 			template <iige::shapes::shape_continuous continuous_shape_t, typename discrete_shape_t, bool is_hollow = false>
-			struct continuous_collider : component<continuous_shape_t, "collider"_hs, true>
+			struct continuous_collider : component<continuous_shape_t, "collider", true>
 				{
-				using component<continuous_shape_t, "collider"_hs, true>::component;
+				using component<continuous_shape_t, "collider", true>::component;
 				using discrete_source = source<discrete_shape_t>;
 				inline static constexpr bool hollow = is_hollow;
 				};

@@ -15,105 +15,238 @@
 
 namespace iige::ecs::systems
 	{
-
 	template <components::colliders::is_collider collider_t>
 	void move_colliders(iige::Scene& scene)
 		{
+		auto reset{scene.ecs_registry.view<collider_t::discrete_source, collider_t>()};
+		reset.each([](const collider_t::discrete_source& collider_source, collider_t& collider) 
+			{
+			if constexpr (components::colliders::is_discrete_collider<collider_t>)
+				{
+				collider.value() = collider_source.value();
+				}
+			else if constexpr (components::colliders::is_continuous_collider<collider_t>)
+				{
+				collider.value().a = collider_source.value();
+				collider.value().b = collider_source.value();
+				}
+			});
+		
 		if constexpr (components::colliders::is_discrete_collider<collider_t>)
 			{
-			auto moving_colliders_view{scene.ecs_registry.view<components::transform, collider_t::discrete_source, collider_t, components::colliders::aabb>()};
-
-			using namespace iige::shapes::transformations;
-			moving_colliders_view.each([](const iige::transform& transform, const collider_t::discrete_source& collider_source, collider_t& collider, components::colliders::aabb& aabb)
+			auto scaling{scene.ecs_registry.view<components::transform::absolute::scale, collider_t>()};
+			scaling.each([](const float& scale, collider_t& collider)
 				{
-				using namespace iige::ecs::components;//TODO check if necessary
-				collider.value() = collider_source.value() * transform;
-				aabb.value() = static_cast<shapes::aabb>(collider.value());
+				utils::math::geometry::transformations::scale_self(collider.value(), scale);
+				});
+			auto rotating{scene.ecs_registry.view<components::transform::absolute::angle, collider_t>()};
+			rotating.each([](const angle::rad& angle, collider_t& collider)
+				{
+				utils::math::geometry::transformations::rotate_self(collider.value(), angle);
+				});
+			auto translating{scene.ecs_registry.view<components::transform::absolute::x, components::transform::absolute::y, collider_t>()};
+			translating.each([](const float& x, const float& y, collider_t& collider)
+				{
+				utils::math::geometry::transformations::translate_self(collider.value(), vec2f{x, y});
 				});
 			}
 		else if constexpr (components::colliders::is_continuous_collider<collider_t>)
 			{
-			auto moving_colliders_view{scene.ecs_registry.view<components::transform_prev, components::transform_next, typename collider_t::discrete_source, collider_t, components::colliders::aabb>()};
-
-			using namespace iige::shapes::transformations;
-			moving_colliders_view.each([]
-					(
-					const iige::transform& transform_prev, const iige::transform& transform_next,
-					const typename collider_t::discrete_source& collider_source, collider_t& collider, components::colliders::aabb& aabb
-					)
+			auto scaling{scene.ecs_registry.view<components::transform::absolute::scale, components::transform::absolute::next::scale, collider_t>()};
+			scaling.each([](const float& scale, const float& scale_next, collider_t& collider)
 				{
-				using namespace iige::ecs::components;//TODO check if necessary
-				collider.value() = collider_t{collider_source.value() * transform_prev, collider_source.value() * transform_next};
-				aabb.value() = static_cast<shapes::aabb>(collider.value());
+				utils::math::geometry::transformations::scale_self(collider.value(), scale, scale_next);
 				});
+			auto rotating{scene.ecs_registry.view<components::transform::absolute::angle, components::transform::absolute::next::angle, collider_t>()};
+			rotating.each([](const angle::rad& angle, const angle::rad& angle_next, collider_t& collider)
+				{
+				utils::math::geometry::transformations::rotate_self(collider.value(), angle, angle_next);
+				});
+			auto translating{scene.ecs_registry.view<components::transform::absolute::x, components::transform::absolute::y, components::transform::absolute::next::x, components::transform::absolute::next::y, collider_t>()};
+			translating.each([](const float& x, const float& y, const float& x_next, const float& y_next, collider_t& collider)
+				{
+				utils::math::geometry::transformations::translate_self(collider.value(), vec2f{x, y}, vec2f{x_next, y_next});
+				});
+			}
+
+		if constexpr (!std::is_same_v<collider_t, components::colliders::aabb>)
+			{
+			auto moved{scene.ecs_registry.view<collider_t, components::colliders::aabb, components::transform::moved>()};
+			moved.each([](const collider_t& collider, components::colliders::aabb& aabb) { aabb.value() = static_cast<shapes::aabb>(collider.value()); });
 			}
 		}
 
-	template <>
-	void move_colliders<components::colliders::aabb>(iige::Scene& scene)
-		{
-		auto moving_colliders_view{scene.ecs_registry.view<components::transform, components::colliders::aabb::discrete_source, components::colliders::aabb>()};
-
-		using namespace iige::shapes::transformations;
-		moving_colliders_view.each([](const iige::transform& transform, const components::colliders::aabb::discrete_source& collider_source, components::colliders::aabb& collider)
-			{
-			using namespace iige::ecs::components;
-			collider.value() = collider_source.value() * transform;
-			});
-		}
-
-
 	namespace details
 		{
-		template <typename transform_type, typename constraints_type = transform_type>
-		void apply_constraints(iige::Scene& scene)
+		template <typename T, typename constraint_t = T>
+		inline void apply_constaints_inner(iige::Scene& scene)
 			{
-			auto     x_min{scene.ecs_registry.view<transform_type::x, typename constraints_type::    x_min>()}; 
-			auto     x_max{scene.ecs_registry.view<transform_type::x, typename constraints_type::    x_max>()}; 
-			auto     y_min{scene.ecs_registry.view<transform_type::y, typename constraints_type::    y_min>()}; 
-			auto     y_max{scene.ecs_registry.view<transform_type::y, typename constraints_type::    y_max>()}; 
-			auto angle{scene.ecs_registry.view<transform_type::angle, typename constraints_type::angle_min, typename constraints_type::angle_max>()};
-			auto scale_min{scene.ecs_registry.view<transform_type, typename constraints_type::scale_min>()}; 
-			auto scale_max{scene.ecs_registry.view<transform_type, typename constraints_type::scale_max>()}; 
+			auto clamp{scene.ecs_registry.view<T, constraint_t::min, constraint_t::max>()};
+			clamp.each([](T::value_type& value, const constraint_t::min::value_type& min, const constraint_t::max::value_type& max)
+				{
+				value = utils::clamp(value, min, max);
+				});
 
-			    x_min.each([](transform_type::x& x, const float&            constraint) { x        = std::max(x, constraint); });
-			    x_max.each([](transform_type::x& x, const float&            constraint) { x        = std::min(x, constraint); });
-			    y_min.each([](transform_type::y& y, const float&            constraint) { y        = std::max(y, constraint); });
-			    y_max.each([](transform_type::y& y, const float&            constraint) { y        = std::min(y, constraint); });
-				angle.each([](transform_type::angle& angle, const iige::angle::deg& min, const iige::angle::deg& max) { angle.clamp(min, max); }); //TODO finish angle in utils :)
-			scale_min.each([](transform_type::scale& scale, const float&            constraint) { transform.scaling              = std::max(transform.scaling, constraint); });
-			scale_max.each([](transform_type::scale& scale, const float&            constraint) { transform.scaling              = std::min(transform.scaling, constraint); });
+			if constexpr (std::is_same_v<T::value_type, float>) // No min or max alone with angles doesn't make sense.
+				{
+				auto min{scene.ecs_registry.view<T, constraint_t::min>(entt::exclude<constraint_t::max>)};
+				min.each([](T::value_type& value, const constraint_t::min::value_type& min) { value = std::max(value, min); });
+
+				auto max{scene.ecs_registry.view<T, constraint_t::max>(entt::exclude<constraint_t::min>)};
+				max.each([](T::value_type& value, const constraint_t::max::value_type& max) { value = std::min(value, max); });
+				}
+			}
+		template <typename T, typename constraint_t = T>
+		inline void apply_constraints(iige::Scene& scene)
+			{
+			apply_constaints_inner<T::x    , constraint_t::x    >(scene);
+			apply_constaints_inner<T::y    , constraint_t::y    >(scene);
+			apply_constaints_inner<T::angle, constraint_t::angle>(scene);
+			apply_constaints_inner<T::scale, constraint_t::scale>(scene);
+			}
+
+		template <typename T>
+		inline void apply_constraints_magnitude(iige::Scene& scene)
+			{
+			auto clamp{scene.ecs_registry.view<T::x, T::y, T::translation_magnitude::min, T::translation_magnitude::max>()};
+			clamp.each([](T::x::value_type& x, T::y::value_type& y, const T::translation_magnitude::min::value_type& min, const T::translation_magnitude::max::value_type& max)
+				{
+				utils::math::vec2f vec2{x, y};
+				float magnitude = vec2.magnitude();
+				magnitude = utils::clamp(magnitude, min, max);
+				vec2 = magnitude;
+				x = vec2.x;
+				y = vec2.y;
+				});
+			
+			auto min{scene.ecs_registry.view<T::x, T::y, T::translation_magnitude::min>(entt::exclude<T::translation_magnitude::max>)};
+			min.each([](T::x::value_type& x, T::y::value_type& y, const T::translation_magnitude::min::value_type& min)
+				{
+				utils::math::vec2f vec2{x, y};
+				float magnitude = vec2.magnitude();
+				magnitude = std::max(magnitude, min);
+				vec2 = magnitude;
+				x = vec2.x;
+				y = vec2.y;
+				});
+			
+			auto max{scene.ecs_registry.view<T::x, T::y, T::translation_magnitude::max>(entt::exclude<T::translation_magnitude::min>)};
+			max.each([](T::x::value_type& x, T::y::value_type& y, const T::translation_magnitude::max::value_type& max)
+				{
+				utils::math::vec2f vec2{x, y};
+				float magnitude = vec2.magnitude();
+				magnitude = std::min(magnitude, max);
+				vec2 = magnitude;
+				x = vec2.x;
+				y = vec2.y;
+				});
+			}
+
+		template <typename self_t, typename other_t>
+		inline void add_to_self_inner(iige::Scene& scene, float delta_time)
+			{
+			auto view{scene.ecs_registry.view<self_t, other_t>()};
+			view.each([delta_time](self_t::value_type& self, const other_t::value_type& other) { self += other * delta_time; });
+			}
+		template <typename a_t, typename b_t, typename out_t>
+		inline void add_into_inner(iige::Scene& scene, float delta_time)
+			{
+			auto view{scene.ecs_registry.view<a_t, b_t, out_t>()};
+			view.each([delta_time](const a_t::value_type& a, const b_t::value_type& b, out_t::value_type& out) { out = a + b * delta_time; });
+			}
+		template <typename a_t, typename b_t, typename out_t, typename exclude>
+		inline void add_into_exclude_inner(iige::Scene& scene, float delta_time)
+			{
+			auto view{scene.ecs_registry.view<a_t, b_t, out_t>(entt::exclude<exclude>)};
+			view.each([delta_time](const a_t::value_type& a, const b_t::value_type& b, out_t::value_type& out) { out = a + b * delta_time; });
+			}
+		template <typename from_t, typename to_t>
+		inline void assign_to_inner(iige::Scene& scene)
+			{
+			auto view{scene.ecs_registry.view<from_t, to_t>()};
+			view.each([](const from_t::value_type& from, to_t::value_type& to) { to = from; });
+			}
+
+		template <typename self_t, typename other_t>
+		inline void add_to_self(iige::Scene& scene, float delta_time)
+			{
+			add_to_self_inner<self_t::x    , other_t::x    >(scene, delta_time);
+			add_to_self_inner<self_t::y    , other_t::y    >(scene, delta_time);
+			add_to_self_inner<self_t::angle, other_t::angle>(scene, delta_time);
+			add_to_self_inner<self_t::scale, other_t::scale>(scene, delta_time);
+			}
+		template <typename a_t, typename b_t, typename out_t>
+		inline void add_into(iige::Scene& scene, float delta_time)
+			{
+			add_into_inner<a_t::x    , b_t::x    , out_t::x    >(scene, delta_time);
+			add_into_inner<a_t::y    , b_t::y    , out_t::y    >(scene, delta_time);
+			add_into_inner<a_t::angle, b_t::angle, out_t::angle>(scene, delta_time);
+			add_into_inner<a_t::scale, b_t::scale, out_t::scale>(scene, delta_time);
+			}
+		template <typename a_t, typename b_t, typename out_t, typename exclude>
+		inline void add_into_exclude(iige::Scene& scene, float delta_time)
+			{
+			add_into_exclude_inner<a_t::x    , b_t::x    , out_t::x    , exclude::x    >(scene, delta_time);
+			add_into_exclude_inner<a_t::y    , b_t::y    , out_t::y    , exclude::y    >(scene, delta_time);
+			add_into_exclude_inner<a_t::angle, b_t::angle, out_t::angle, exclude::angle>(scene, delta_time);
+			add_into_exclude_inner<a_t::scale, b_t::scale, out_t::scale, exclude::scale>(scene, delta_time);
+			}
+		template <typename from_t, typename to_t>
+		inline void assign_to(iige::Scene& scene)
+			{
+			assign_to_inner<from_t::x    , to_t::x    >(scene);
+			assign_to_inner<from_t::y    , to_t::y    >(scene);
+			assign_to_inner<from_t::angle, to_t::angle>(scene);
+			assign_to_inner<from_t::scale, to_t::scale>(scene);
+			}
+
+		template <typename from_t, typename to_t, typename out_t>
+		inline void interpolate_inner(iige::Scene& scene, float interpolation)
+			{
+			auto view{scene.ecs_registry.view<from_t, to_t, out_t>()};
+			view.each([interpolation](const from_t::value_type& from, const to_t::value_type& to, out_t::value_type& out)
+				{
+				out = utils::lerp(from, to, interpolation);
+				});
 			}
 		}
 
 
 	inline void move(iige::Scene& scene, float delta_time)
 		{
-		details::apply_constraints<components::acceleration>(scene);
-		auto accelerate_view{scene.ecs_registry.view<components::speed, components::acceleration>()};
-		accelerate_view.each([&](iige::transform& speed, const iige::transform& acceleration) { speed += acceleration * delta_time; });
-
-		details::apply_constraints<components::speed>(scene);
-
-		auto movement_view{scene.ecs_registry.view<components::transform, components::speed, components::transform_next, components::transform_prev>()};
-
-
-		/*std::for_each(std::execution::par, movement_view.begin(), movement_view.end(), [&](const auto entity)
+		auto previously_moved{scene.ecs_registry.view<components::transform::moved>()};
+		previously_moved.each([&](const entt::entity entity)
 			{
-				  utils::math::transform2& transform     {movement_view.get<components::transform     >(entity)};
-			const utils::math::transform2& speed         {movement_view.get<components::speed         >(entity)};
-				  utils::math::transform2& transform_next{movement_view.get<components::transform_next>(entity)};
-				  utils::math::transform2& transform_prev{movement_view.get<components::transform_prev>(entity)};
-			/**/
-		movement_view.each([&](utils::math::transform2& transform, const utils::math::transform2& speed, utils::math::transform2& transform_next, utils::math::transform2& transform_prev)
-			{
-			transform      = transform_next;
-			transform_prev = transform;
-			transform_next += speed * delta_time;
+			scene.ecs_registry.remove<components::transform::moved>(entity);
 			});
+		
+		// Speed and acceleration
+		details::apply_constraints          <components::transform::acceleration                                                                                        >(scene);
+		details::apply_constraints_magnitude<components::transform::acceleration                                                                                        >(scene);
+		details::add_to_self                <components::transform::speed, components::transform::acceleration                                                          >(scene, delta_time);
+		details::apply_constraints          <components::transform::speed                                                                                               >(scene);
+		details::apply_constraints_magnitude<components::transform::speed                                                                                               >(scene);
+		
+		// Relative movement
+		details::assign_to        <components::transform::relative::next, components::transform::relative                                                               >(scene);
+		
+		details::add_into         <components::transform::relative, components::transform::speed, components::transform::relative::next                                 >(scene, delta_time);
+		details::apply_constraints<components::transform::relative::next, components::transform::relative                                                               >(scene);
+		
+		// Absolute only movement
+		details::assign_to        <components::transform::absolute::next, components::transform::absolute                                                               >(scene);
+		// Exclude relative > evaluates movement for entities without a parent
+		details::add_into_exclude <components::transform::absolute, components::transform::speed, components::transform::absolute::next, components::transform::relative>(scene, delta_time);
 
-		details::apply_constraints<components::transform_next, components::transform>(scene);
-
+		// Absolute based on relative
+		// TODO > evaluate movement for entities with a parent
+		
+		details::apply_constraints<components::transform::absolute::next, components::transform::absolute                                                               >(scene);
+		
+		// TODO only add moved flag if it akshually moved
+		auto moved{scene.ecs_registry.view<components::transform::absolute::x>()};
+		moved.each([&scene](entt::entity entity, components::transform::absolute::x) { scene.ecs_registry.emplace<components::transform::moved>(entity); });
+		
 		move_colliders<components::colliders::point                >(scene);
 		move_colliders<components::colliders::segment              >(scene);
 		move_colliders<components::colliders::aabb                 >(scene);
@@ -129,17 +262,9 @@ namespace iige::ecs::systems
 
 	inline void interpolate(iige::Scene& scene, float interpolation)
 		{
-		auto movement_view{scene.ecs_registry.view<components::transform, components::transform_next, components::transform_prev>()};
-
-		/*std::for_each(std::execution::par, movement_view.begin(), movement_view.end(), [&movement_view, &interpolation](const auto entity)
-			{
-			      utils::math::transform2& transform     {movement_view.get<components::transform     >(entity)};
-			const utils::math::transform2& transform_next{movement_view.get<components::transform_next>(entity)};
-			const utils::math::transform2& transform_prev{movement_view.get<components::transform_prev>(entity)};
-			/**/
-		movement_view.each([interpolation](utils::math::transform2& transform, const utils::math::transform2& transform_next, const utils::math::transform2& transform_prev)
-			{
-			transform = {utils::math::transform2::lerp(transform_prev, transform_next, interpolation)};
-			});
+		details::interpolate_inner<components::transform::absolute::x    , components::transform::absolute::next::x    , components::transform::interpolated::x    >(scene, interpolation);
+		details::interpolate_inner<components::transform::absolute::y    , components::transform::absolute::next::y    , components::transform::interpolated::y    >(scene, interpolation);
+		details::interpolate_inner<components::transform::absolute::angle, components::transform::absolute::next::angle, components::transform::interpolated::angle>(scene, interpolation);
+		details::interpolate_inner<components::transform::absolute::scale, components::transform::absolute::next::scale, components::transform::interpolated::scale>(scene, interpolation);
 		}
 	}
