@@ -214,11 +214,7 @@ namespace iige::ecs::systems
 
 	inline void move(iige::Scene& scene, float delta_time)
 		{
-		auto previously_moved{scene.ecs_registry.view<components::transform::moved>()};
-		previously_moved.each([&](const entt::entity entity)
-			{
-			scene.ecs_registry.remove<components::transform::moved>(entity);
-			});
+		scene.ecs_registry.clear<components::transform::moved>();
 		
 		// Speed and acceleration
 		details::apply_constraints          <components::transform::acceleration                                                                                        >(scene);

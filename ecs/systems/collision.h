@@ -35,22 +35,8 @@ namespace iige::ecs::systems
 		public:
 			virtual void operator()(iige::Scene& scene) const noexcept final override
 				{
-				if (true)
-					{
-					auto collided{scene.ecs_registry.view<components::collided_with>()};
-					collided.each([&](const entt::entity entity, const components::collided_with&)
-						{
-						scene.ecs_registry.remove<components::collided_with>(entity);
-						});
-					}
-				if (true)
-					{
-					auto collided{scene.ecs_registry.view<components::collision_data>()};
-					collided.each([&](const entt::entity entity, const components::collision_data&)
-						{
-						scene.ecs_registry.remove<components::collision_data>(entity);
-						});
-					}
+				scene.ecs_registry.clear<components::collided_with>();
+				scene.ecs_registry.clear<components::collision_data>();
 
 				[&] <std::size_t... I>(std::index_sequence<I...>) {
 					(evaluate<I>(scene), ...);
