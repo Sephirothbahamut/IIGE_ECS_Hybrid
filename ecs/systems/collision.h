@@ -138,9 +138,6 @@ namespace iige::ecs::systems
 		}
 	inline void update_colliders_vertex_array(const shapes::circle          & shape, sf::VertexArray& va, sf::Color c)
 		{
-		shape.center;
-		shape.radius;
-
 		iige::vec2f right{iige::vec2f::right() * shape.radius};
 		iige::vec2f vec  {iige::vec2f::right() * shape.radius};
 
@@ -150,7 +147,7 @@ namespace iige::ecs::systems
 		for (utils::math::angle::deg α = delta_α; α.value < utils::math::angle::deg::full_angle; α += delta_α)
 			{
 			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
-			vec = α;
+			vec = right + α;
 			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
 			}
 		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
