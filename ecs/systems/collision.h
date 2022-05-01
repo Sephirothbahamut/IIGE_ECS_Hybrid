@@ -144,10 +144,10 @@ namespace iige::ecs::systems
 		iige::vec2f right{iige::vec2f::right() * shape.radius};
 		iige::vec2f vec  {iige::vec2f::right() * shape.radius};
 
-		utils::beta::math::angle::rad delta_α{10 / shape.radius};
+		utils::math::angle::deg delta_α{1000 /shape.radius};
 
-		using namespace utils::beta::math::angle::literals;
-		for (utils::beta::math::angle::rad α = delta_α; α.value < utils::beta::math::angle::rad::full_angle; α += delta_α)
+		using namespace utils::math::angle::literals;
+		for (utils::math::angle::deg α = delta_α; α.value < utils::math::angle::deg::full_angle; α += delta_α)
 			{
 			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
 			vec = α;

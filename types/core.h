@@ -27,5 +27,5 @@ namespace iige
 
 	using transform = utils::math::transform2;
 
-	namespace angle = utils::beta::math::angle;
+	namespace angle = utils::math::angle;
 	}

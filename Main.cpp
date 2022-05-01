@@ -18,26 +18,8 @@
 #include <utils/math/geometry/continuous_interactions.h>
 #include <iostream>
 
-
-
-
 int main()
 	{
-	/*iige::shapes::circle c{{}, 32.f};
-	auto f = utils::constants::epsilonf;
-	iige::shapes::continuous_point p{ { 32 + f / 2.f, 0 }, { 50, 0 } };
-
-	auto a1 = iige::shapes::collides(c, p);
-	auto a2 = iige::shapes::intersects(c, p);
-	auto a3 = iige::shapes::contains(c, p.a);
-	auto a4 = iige::shapes::continuous_collides(p, c, a3);
-	
-	
-
-	return 0;*/
-
-
-
 	using namespace utils::math::angle::literals;
 	
 	iige::Window window{iige::Window::create_info{.size{1024, 768}, .position{10, 10}, .title{"My window"}}};
@@ -60,9 +42,9 @@ int main()
 		auto entity{scene.ecs_registry.create()};
 
 		iige::vec2f       position{x_distribution(mt), y_distribution(mt)};
-		iige::angle::rad  angle   {angle_distribution(mt)};
+		iige::angle::deg  angle   {angle_distribution(mt)};
 		iige::vec2f       speed   {speed_distribution(mt), speed_distribution (mt)};
-		iige::angle::rad  rotation{rotation_distribution(mt)};
+		iige::angle::deg  rotation{rotation_distribution(mt)};
 
 		iige::ecs::components::transform::absolute::x::min m;
 
