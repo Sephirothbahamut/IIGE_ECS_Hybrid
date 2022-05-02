@@ -72,7 +72,10 @@ namespace iige::ecs::systems
 		if constexpr (!std::is_same_v<collider_t, components::colliders::aabb>)
 			{
 			auto moved{scene.ecs_registry.view<collider_t, components::colliders::aabb, components::transform::moved>()};
-			moved.each([](const collider_t& collider, components::colliders::aabb& aabb) { aabb.value() = static_cast<shapes::aabb>(collider.value()); });
+			moved.each([](const collider_t& collider, components::colliders::aabb& aabb) 
+				{
+				aabb.value() = static_cast<shapes::aabb>(collider.value());
+				});
 			}
 		}
 
@@ -209,12 +212,28 @@ namespace iige::ecs::systems
 				out = utils::lerp(from, to, interpolation);
 				});
 			}
+
+		template <typename T>
+		inline void mark_moved_inner(iige::Scene& scene)
+			{
+			auto moved{scene.ecs_registry.view<T>()};
+			moved.each([&scene](entt::entity entity, T) { scene.ecs_registry.get_or_emplace<components::transform::moved>(entity); });
+			}
+		inline void mark_moved(iige::Scene& scene)
+			{
+			mark_moved_inner<components::transform::speed::x    >(scene);
+			mark_moved_inner<components::transform::speed::y    >(scene);
+			mark_moved_inner<components::transform::speed::angle>(scene);
+			mark_moved_inner<components::transform::speed::scale>(scene);
+			}
 		}
 
 
 	inline void move(iige::Scene& scene, float delta_time)
 		{
 		scene.ecs_registry.clear<components::transform::moved>();
+		details::mark_moved(scene);
+		details::mark_moved_inner<components::transform::absolute::x>(scene);
 		
 		// Speed and acceleration
 		details::apply_constraints          <components::transform::acceleration                                                                                        >(scene);
@@ -238,11 +257,6 @@ namespace iige::ecs::systems
 		// TODO > evaluate movement for entities with a parent
 		
 		details::apply_constraints<components::transform::absolute::next, components::transform::absolute                                                               >(scene);
-		
-		// TODO only add moved flag if it akshually moved
-		auto moved{scene.ecs_registry.view<components::transform::absolute::x>()};
-		moved.each([&scene](entt::entity entity, components::transform::absolute::x) { scene.ecs_registry.emplace<components::transform::moved>(entity); });
-		
 		move_colliders<components::colliders::point                >(scene);
 		move_colliders<components::colliders::segment              >(scene);
 		move_colliders<components::colliders::aabb                 >(scene);

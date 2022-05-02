@@ -13,13 +13,13 @@ namespace iige::ecs::systems
 	void draw(iige::Scene& scene, sf::RenderWindow& window)
 		{
 		//TODO figure out compound transform view :|
-		/*auto movement_view{scene.ecs_registry.view<components::transform, components::bad_draw>()};
 
-		movement_view.each([&](const iige::transform& transform, auto& drawable)
+		auto movement_view{scene.ecs_registry.view<components::transform::interpolated::x, components::transform::interpolated::y, components::bad_draw>()};
+
+		movement_view.each([&](const float& x, const float& y, auto& drawable)
 			{
-			drawable.cs.setPosition(utils::math::vec_cast<sf::Vector2, float>(transform.translation));
-			drawable.cs.setRotation(transform.rotation.value);
+			drawable.cs.setPosition({x, y});
 			window.draw(drawable.cs);
-			});*/
+			});
 		}
 	}
