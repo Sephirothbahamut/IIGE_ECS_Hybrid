@@ -47,8 +47,8 @@ namespace iige::ecs::systems
 			template<size_t layer>
 			void evaluate(iige::Scene& scene) const noexcept
 				{
-				auto targets/*TODO better names*/{scene.ecs_registry.group<components::has_collision<layer>, components::colliders::aabb, components::colliders::details::ptr>()};
-				auto active /*TODO better names*/{scene.ecs_registry.group<components::collides_with<layer>, components::colliders::aabb, components::colliders::details::ptr>()};
+				auto targets{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::details::bounding_aabb, components::colliders::details::ptr>()};
+				auto active {scene.ecs_registry.view<components::collides_with<layer>, components::colliders::details::bounding_aabb, components::colliders::details::ptr>()};
 				
 				/*
 				std::mutex adding_mutex;
@@ -57,9 +57,9 @@ namespace iige::ecs::systems
 					const components::colliders::aabb&  a_aabb        {active.get<components::colliders::aabb        >(entity_a)};
 					components::colliders::details::ptr a_collider_ptr{active.get<components::colliders::details::ptr>(entity_a)};
 					/*/
-				active.each([&](const entt::entity entity_a, const components::colliders::aabb& a_aabb, components::colliders::details::ptr a_collider_ptr)
+				active.each([&](const entt::entity entity_a, const components::colliders::details::bounding_aabb& a_aabb, components::colliders::details::ptr a_collider_ptr)
 					{/**/
-					targets.each([&](const entt::entity entity_b, const components::colliders::aabb& b_aabb, components::colliders::details::ptr b_collider_ptr)
+					targets.each([&](const entt::entity entity_b, const components::colliders::details::bounding_aabb& b_aabb, components::colliders::details::ptr b_collider_ptr)
 						{
 						if (entity_a == entity_b) { return; }
 				
@@ -194,63 +194,23 @@ namespace iige::ecs::systems
 			});
 		}
 
-	template <>
-	inline void update_colliders_vertex_array<components::colliders::aabb>(iige::Scene& scene, sf::VertexArray& va)
-		{
-		using T = components::colliders::aabb;
-		auto colliders_not_colliding{scene.ecs_registry.view<T>(/*entt::exclude
-			<
-			components::collided_with,
-			components::colliders::segment,
-			components::colliders::circle,
-			components::colliders::polygon,
-			components::colliders::convex_polygon,
-			components::colliders::continuous_point,
-			components::colliders::hollow_circle,
-			components::colliders::hollow_polygon,
-			components::colliders::hollow_convex_polygon
-			>*/)};
-		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>(/*entt::exclude
-			<
-			components::colliders::segment,
-			components::colliders::circle,
-			components::colliders::polygon,
-			components::colliders::convex_polygon,
-			components::colliders::continuous_point,
-			components::colliders::hollow_circle,
-			components::colliders::hollow_polygon,
-			components::colliders::hollow_convex_polygon
-			>*/)};
-
-		sf::Color c;
-
-		c = sf::Color::White;
-		colliders_not_colliding.each([&](entt::entity entity, const T& shape)
-			{
-			update_colliders_vertex_array(shape.value(), va, c);
-			});
-		c = sf::Color::Red;
-		colliders_____colliding.each([&](entt::entity entity, const T& shape, components::collided_with)
-			{
-			update_colliders_vertex_array(shape.value(), va, c);
-			});
-		}
-
 	inline sf::VertexArray& update_colliders_vertex_array(iige::Scene& scene, sf::VertexArray& va)
 		{
 		va.clear();
 
-		update_colliders_vertex_array<components::colliders::point                >(scene, va);
-		update_colliders_vertex_array<components::colliders::segment              >(scene, va);
-		update_colliders_vertex_array<components::colliders::aabb                 >(scene, va);
-		update_colliders_vertex_array<components::colliders::circle               >(scene, va);
-		update_colliders_vertex_array<components::colliders::polygon              >(scene, va);
-		update_colliders_vertex_array<components::colliders::convex_polygon       >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_aabb          >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_circle        >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_polygon       >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_convex_polygon>(scene, va);
-		update_colliders_vertex_array<components::colliders::continuous_point     >(scene, va);
+		update_colliders_vertex_array<components::colliders::point                 >(scene, va);
+		update_colliders_vertex_array<components::colliders::segment               >(scene, va);
+		update_colliders_vertex_array<components::colliders::aabb                  >(scene, va);
+		update_colliders_vertex_array<components::colliders::circle                >(scene, va);
+		update_colliders_vertex_array<components::colliders::polygon               >(scene, va);
+		update_colliders_vertex_array<components::colliders::convex_polygon        >(scene, va);
+		update_colliders_vertex_array<components::colliders::hollow_aabb           >(scene, va);
+		update_colliders_vertex_array<components::colliders::hollow_circle         >(scene, va);
+		update_colliders_vertex_array<components::colliders::hollow_polygon        >(scene, va);
+		update_colliders_vertex_array<components::colliders::hollow_convex_polygon >(scene, va);
+		update_colliders_vertex_array<components::colliders::continuous_point      >(scene, va);
+		
+		//update_colliders_vertex_array<components::colliders::details::bounding_aabb>(scene, va);
 
 		return va;
 		}

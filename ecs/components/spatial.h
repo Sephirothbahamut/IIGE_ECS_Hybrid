@@ -88,10 +88,26 @@ namespace iige::ecs::components::transform
 			};
 		struct next
 			{
-			using x     = component<float           , "relative_next_x"    >;
-			using y     = component<float           , "relative_next_y"    >;
-			using angle = component<iige::angle::rad, "relative_next_angle">;
-			using scale = component<float           , "relative_next_scale">;
+			struct x     : component<float           , "relative_next_x"    > 
+				{ 
+				using      component<float           , "relative_next_x"    >::component;
+				using current_t = relative::x;
+				};
+			struct y     : component<float           , "relative_next_y"    > 
+				{ 
+				using      component<float           , "relative_next_y"    >::component;
+				using current_t = relative::y;
+				};
+			struct angle : component<iige::angle::rad, "relative_next_angle"> 
+				{ 
+				using      component<iige::angle::rad, "relative_next_angle">::component;
+				using current_t = relative::angle;
+				};
+			struct scale : component<float           , "relative_next_scale"> 
+				{ 
+				using      component<float           , "relative_next_scale">::component;
+				using current_t = relative::scale;
+				};
 			};
 		};
 	struct absolute
@@ -122,10 +138,26 @@ namespace iige::ecs::components::transform
 			};
 		struct next
 			{
-			using x = component<float, "absolute_next_x">;
-			using y = component<float, "absolute_next_y">;
-			using angle = component<iige::angle::rad, "absolute_next_angle">;
-			using scale = component<float, "absolute_next_scale">;
+			struct x     : component<float           , "absolute_next_x"    > 
+				{ 
+				using      component<float           , "absolute_next_x"    >::component;
+				using current_t = absolute::x;
+				};
+			struct y     : component<float           , "absolute_next_y"    > 
+				{ 
+				using      component<float           , "absolute_next_y"    >::component;
+				using current_t = absolute::y;
+				};
+			struct angle : component<iige::angle::rad, "absolute_next_angle"> 
+				{ 
+				using      component<iige::angle::rad, "absolute_next_angle">::component;
+				using current_t = absolute::angle;
+				};
+			struct scale : component<float           , "absolute_next_scale"> 
+				{ 
+				using      component<float           , "absolute_next_scale">::component;
+				using current_t = absolute::scale;
+				};
 			};
 		};
 	struct interpolated
@@ -213,7 +245,35 @@ namespace iige::ecs::components::transform
 			using max = component<float, "acceleration_translation_magnitude_max">;
 			};
 		};
+	struct moved
+		{
+		static constexpr auto in_place_delete = true;
+		};
 
+
+
+	template <typename T>
+	concept is_x = ::utils::concepts::any_of<T, absolute::x, absolute::next::x, relative::x, relative::next::x, speed::x, acceleration::x, interpolated::x>;
+	template <typename T>
+	concept is_y = ::utils::concepts::any_of<T, absolute::y, absolute::next::y, relative::y, relative::next::y, speed::y, acceleration::y, interpolated::y>;
+	template <typename T>
+	concept is_angle = ::utils::concepts::any_of<T, absolute::angle, absolute::next::angle, relative::angle, relative::next::angle, speed::angle, acceleration::angle, interpolated::angle>;
+	template <typename T>
+	concept is_scale = ::utils::concepts::any_of<T, absolute::scale, absolute::next::scale, relative::scale, relative::next::scale, speed::scale, acceleration::scale, interpolated::scale>;
+
+	template <typename T>
+	concept is_next = ::utils::concepts::any_of
+		<T, 
+		absolute::next::x, absolute::next::y, absolute::next::angle, absolute::next::scale, 
+		relative::next::x, relative::next::y, relative::next::angle, relative::next::scale
+		>;
+
+	template <typename T>
+	concept is_transform_component = is_x<T> || is_y<T> || is_angle<T> || is_scale<T>;
+	}
+
+namespace iige::ecs::components
+	{
 	struct parent
 		{
 		size_t children_count{0};
@@ -224,10 +284,5 @@ namespace iige::ecs::components::transform
 		entt::entity parent{entt::null};
 		entt::entity next_sibling{entt::null};
 		entt::entity prev_sibling{entt::null};
-		};
-
-	struct moved
-		{
-		static constexpr auto in_place_delete = true;
 		};
 	}

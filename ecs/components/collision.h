@@ -73,6 +73,8 @@ namespace iige::ecs::components
 				using discrete_source = source<discrete_shape_t>;
 				inline static constexpr bool hollow = is_hollow;
 				};
+
+			using bounding_aabb = component<iige::shapes::aabb, "colliders_bounding_aabb">;
 			}
 
 		using point                 = details::discrete_collider<iige::shapes::point         , false>;
@@ -163,10 +165,7 @@ namespace iige::ecs::components
 		auto& current_collider{registry.get_or_emplace<collider_t>(entity)};
 		auto& current_collider_ptr{registry.emplace_or_replace<colliders::details::ptr>(entity, static_cast<collider_t*>(&current_collider))};
 
-		if constexpr (!std::is_same_v<collider_t, colliders::aabb>)
-			{
-			utils::discard(registry.get_or_emplace<colliders::aabb>(entity, static_cast<shapes::aabb>(current_collider.value())));
-			}
+		utils::discard(registry.get_or_emplace<colliders::details::bounding_aabb>(entity, static_cast<shapes::aabb>(current_collider.value())));
 
 		if constexpr (!is_static)
 			{

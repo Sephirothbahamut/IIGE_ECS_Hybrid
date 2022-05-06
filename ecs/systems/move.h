@@ -1,8 +1,11 @@
 #pragma once
 
+#include <string>
 #include <execution>
+#include <stdexcept>
 
 #include <utils/math/geometry/transformations.h>
+#include <utils/compilation/debug.h>
 
 #include "../entt.h"
 
@@ -69,14 +72,12 @@ namespace iige::ecs::systems
 				});
 			}
 
-		if constexpr (!std::is_same_v<collider_t, components::colliders::aabb>)
+		
+		auto moved{scene.ecs_registry.view<collider_t, components::colliders::details::bounding_aabb, components::transform::moved>()};
+		moved.each([](const collider_t& collider, components::colliders::details::bounding_aabb& aabb) 
 			{
-			auto moved{scene.ecs_registry.view<collider_t, components::colliders::aabb, components::transform::moved>()};
-			moved.each([](const collider_t& collider, components::colliders::aabb& aabb) 
-				{
-				aabb.value() = static_cast<shapes::aabb>(collider.value());
-				});
-			}
+			aabb.value() = static_cast<shapes::aabb>(collider.value());
+			});
 		}
 
 	namespace details
@@ -226,6 +227,101 @@ namespace iige::ecs::systems
 			mark_moved_inner<components::transform::speed::angle>(scene);
 			mark_moved_inner<components::transform::speed::scale>(scene);
 			}
+
+
+		template <components::transform::is_transform_component T>
+		inline utils::observer_ptr<typename T::value_type> get_value_next_if_present_otherwise_current(Scene& scene, entt::entity entity)
+			{
+			if (auto ptr{scene.ecs_registry.try_get<T>(entity)})
+				{
+				return &(ptr->value());
+				}
+
+			if constexpr (components::transform::is_next<T>)
+				{
+				if (auto ptr{scene.ecs_registry.try_get<typename T::current_t>(entity)})
+					{
+					return &(ptr->value());
+					}
+				}
+
+			return nullptr;
+			}
+
+		template <typename relative_t, typename absolute_t, typename base_t>
+		inline void add_parent_inner(iige::Scene& scene)
+			{
+			auto view{scene.ecs_registry.view<relative_t, absolute_t>()};
+			view.each([&](entt::entity entity, const relative_t::value_type& relative, absolute_t::value_type& absolute)
+				{
+				if constexpr (utils::compilation::debug)
+					{
+					//TODO make sure this is guaranteed by the scene
+					if (!scene.ecs_registry.all_of<components::child>(entity))
+						{
+						throw std::runtime_error{"Malformed hierarchy structure: entity \"" + std::to_string(static_cast<uint32_t>(entity)) + "\" has relative transform components, but lacks child component."};
+						}
+					}
+				auto parent_id{scene.ecs_registry.get<components::child>(entity).parent};
+
+				auto updated_relative{relative};
+				auto other_axis{0.f}; // Only used for x/y, must update other translation axis even if it has no relative value nor next value.
+
+				if constexpr (components::transform::is_x<relative_t> || components::transform::is_y<relative_t>)
+					{
+					auto parent_scaling_ptr{get_value_next_if_present_otherwise_current<typename base_t::scale>(scene, parent_id)};
+					if (parent_scaling_ptr) { updated_relative *= *parent_scaling_ptr; }
+
+					auto parent_rotation_ptr{get_value_next_if_present_otherwise_current<typename base_t::angle>(scene, parent_id)};
+					if (parent_rotation_ptr)
+						{
+						// Must update other translation axis even if it has no relative value nor next value.
+						if constexpr (components::transform::is_x<relative_t>)
+							{
+							auto my_y_ptr{get_value_next_if_present_otherwise_current<components::transform::relative::y>(scene, entity)};
+							if (my_y_ptr) { other_axis = *my_y_ptr; }
+
+							updated_relative *= parent_rotation_ptr->cos();
+
+							}
+						else
+							{
+							updated_relative *= parent_rotation_ptr->sin();
+							}
+						}
+					}
+
+				auto parent_value_ptr{get_value_next_if_present_otherwise_current<absolute_t>(scene, parent_id)};
+				if (parent_value_ptr)
+					{
+					absolute = updated_relative + *parent_value_ptr;
+					}
+				else 
+					{
+					absolute = updated_relative;
+					}
+				});
+			}
+
+		inline void add_parent(iige::Scene& scene)
+			{
+			// TODO sort only if moved ? and if parent moved ???
+			scene.ecs_registry.sort<components::child>([&](const entt::entity lhs, const entt::entity rhs) {
+				const auto& clhs = scene.ecs_registry.get<components::child>(lhs);
+				const auto& crhs = scene.ecs_registry.get<components::child>(rhs);
+				return crhs.parent == lhs || clhs.next_sibling == rhs
+					|| (!(clhs.parent == rhs || crhs.next_sibling == lhs) && (clhs.parent < crhs.parent || (clhs.parent == crhs.parent && &clhs < &crhs)));
+				});
+
+			add_parent_inner<components::transform::relative      ::x    , components::transform::absolute      ::x    , components::transform::absolute      >(scene);
+			add_parent_inner<components::transform::relative      ::y    , components::transform::absolute      ::y    , components::transform::absolute      >(scene);
+			add_parent_inner<components::transform::relative      ::angle, components::transform::absolute      ::angle, components::transform::absolute      >(scene);
+			add_parent_inner<components::transform::relative      ::scale, components::transform::absolute      ::scale, components::transform::absolute      >(scene);
+			add_parent_inner<components::transform::relative::next::x    , components::transform::absolute::next::x    , components::transform::absolute::next>(scene);
+			add_parent_inner<components::transform::relative::next::y    , components::transform::absolute::next::y    , components::transform::absolute::next>(scene);
+			add_parent_inner<components::transform::relative::next::angle, components::transform::absolute::next::angle, components::transform::absolute::next>(scene);
+			add_parent_inner<components::transform::relative::next::scale, components::transform::absolute::next::scale, components::transform::absolute::next>(scene);
+			}
 		}
 
 
@@ -254,7 +350,8 @@ namespace iige::ecs::systems
 		details::add_into_exclude <components::transform::absolute, components::transform::speed, components::transform::absolute::next, components::transform::relative>(scene, delta_time);
 
 		// Absolute based on relative
-		// TODO > evaluate movement for entities with a parent
+		details::add_parent                                                                                                                                              (scene);
+		
 		
 		details::apply_constraints<components::transform::absolute::next, components::transform::absolute                                                               >(scene);
 		move_colliders<components::colliders::point                >(scene);
