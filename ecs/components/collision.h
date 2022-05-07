@@ -3,6 +3,7 @@
 #include <variant>
 #include <cassert>
 
+#include <utils/memory.h>
 #include <utils/compilation/debug.h>
 #include <utils/math/geometry/interactions.h>
 #include <utils/math/geometry/transformations.h>

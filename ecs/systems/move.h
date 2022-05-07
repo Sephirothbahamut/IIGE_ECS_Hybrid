@@ -37,38 +37,38 @@ namespace iige::ecs::systems
 		
 		if constexpr (components::colliders::is_discrete_collider<collider_t>)
 			{
-			auto scaling{scene.ecs_registry.view<components::transform::absolute::scale, collider_t>()};
-			scaling.each([](const float& scale, collider_t& collider)
+			auto scaling{scene.ecs_registry.view<components::transform::absolute::scaling, collider_t>()};
+			scaling.each([](const float& scaling, collider_t& collider)
 				{
-				utils::math::geometry::transformations::scale_self(collider.value(), scale);
+				utils::math::geometry::transformations::scale_self(collider.value(), scaling);
 				});
-			auto rotating{scene.ecs_registry.view<components::transform::absolute::angle, collider_t>()};
-			rotating.each([](const angle::rad& angle, collider_t& collider)
+			auto rotating{scene.ecs_registry.view<components::transform::absolute::rotation, collider_t>()};
+			rotating.each([](const angle::rad& rotation, collider_t& collider)
 				{
-				utils::math::geometry::transformations::rotate_self(collider.value(), angle);
+				utils::math::geometry::transformations::rotate_self(collider.value(), rotation);
 				});
-			auto translating{scene.ecs_registry.view<components::transform::absolute::x, components::transform::absolute::y, collider_t>()};
-			translating.each([](const float& x, const float& y, collider_t& collider)
+			auto translating{scene.ecs_registry.view<components::transform::absolute::translation, collider_t>()};
+			translating.each([](const vec2f& xy, collider_t& collider)
 				{
-				utils::math::geometry::transformations::translate_self(collider.value(), vec2f{x, y});
+				utils::math::geometry::transformations::translate_self(collider.value(), xy);
 				});
 			}
 		else if constexpr (components::colliders::is_continuous_collider<collider_t>)
 			{
-			auto scaling{scene.ecs_registry.view<components::transform::absolute::scale, components::transform::absolute::next::scale, collider_t>()};
-			scaling.each([](const float& scale, const float& scale_next, collider_t& collider)
+			auto scaling{scene.ecs_registry.view<components::transform::absolute::scaling, components::transform::absolute::next::scaling, collider_t>()};
+			scaling.each([](const float& scaling, const float& scaling_next, collider_t& collider)
 				{
-				utils::math::geometry::transformations::scale_self(collider.value(), scale, scale_next);
+				utils::math::geometry::transformations::scale_self(collider.value(), scaling, scaling_next);
 				});
-			auto rotating{scene.ecs_registry.view<components::transform::absolute::angle, components::transform::absolute::next::angle, collider_t>()};
-			rotating.each([](const angle::rad& angle, const angle::rad& angle_next, collider_t& collider)
+			auto rotating{scene.ecs_registry.view<components::transform::absolute::rotation, components::transform::absolute::next::rotation, collider_t>()};
+			rotating.each([](const angle::rad& rotation, const angle::rad& rotation_next, collider_t& collider)
 				{
-				utils::math::geometry::transformations::rotate_self(collider.value(), angle, angle_next);
+				utils::math::geometry::transformations::rotate_self(collider.value(), rotation, rotation_next);
 				});
-			auto translating{scene.ecs_registry.view<components::transform::absolute::x, components::transform::absolute::y, components::transform::absolute::next::x, components::transform::absolute::next::y, collider_t>()};
-			translating.each([](const float& x, const float& y, const float& x_next, const float& y_next, collider_t& collider)
+			auto translating{scene.ecs_registry.view<components::transform::absolute::translation, components::transform::absolute::next::translation, collider_t>()};
+			translating.each([](const vec2f& xy, const vec2f& xy_next, collider_t& collider)
 				{
-				utils::math::geometry::transformations::translate_self(collider.value(), vec2f{x, y}, vec2f{x_next, y_next});
+				utils::math::geometry::transformations::translate_self(collider.value(), xy, xy_next);
 				});
 			}
 
@@ -103,46 +103,36 @@ namespace iige::ecs::systems
 		template <typename T, typename constraint_t = T>
 		inline void apply_constraints(iige::Scene& scene)
 			{
-			apply_constaints_inner<T::x    , constraint_t::x    >(scene);
-			apply_constaints_inner<T::y    , constraint_t::y    >(scene);
-			apply_constaints_inner<T::angle, constraint_t::angle>(scene);
-			apply_constaints_inner<T::scale, constraint_t::scale>(scene);
+			apply_constaints_inner<T::translation, constraint_t::translation>(scene);
+			apply_constaints_inner<T::rotation   , constraint_t::rotation   >(scene);
+			apply_constaints_inner<T::scaling    , constraint_t::scaling    >(scene);
 			}
 
 		template <typename T>
 		inline void apply_constraints_magnitude(iige::Scene& scene)
 			{
-			auto clamp{scene.ecs_registry.view<T::x, T::y, T::translation_magnitude::min, T::translation_magnitude::max>()};
-			clamp.each([](T::x::value_type& x, T::y::value_type& y, const T::translation_magnitude::min::value_type& min, const T::translation_magnitude::max::value_type& max)
+			auto clamp{scene.ecs_registry.view<T::translation, T::translation_magnitude::min, T::translation_magnitude::max>()};
+			clamp.each([](T::translation::value_type& xy, const T::translation_magnitude::min::value_type& min, const T::translation_magnitude::max::value_type& max)
 				{
-				utils::math::vec2f vec2{x, y};
-				float magnitude = vec2.magnitude();
+				float magnitude = xy.magnitude();
 				magnitude = utils::clamp(magnitude, min, max);
-				vec2 = magnitude;
-				x = vec2.x;
-				y = vec2.y;
+				xy = magnitude;
 				});
 			
-			auto min{scene.ecs_registry.view<T::x, T::y, T::translation_magnitude::min>(entt::exclude<T::translation_magnitude::max>)};
-			min.each([](T::x::value_type& x, T::y::value_type& y, const T::translation_magnitude::min::value_type& min)
+			auto min{scene.ecs_registry.view<T::translation, T::translation_magnitude::min>(entt::exclude<T::translation_magnitude::max>)};
+			min.each([](T::translation::value_type& xy, const T::translation_magnitude::min::value_type& min)
 				{
-				utils::math::vec2f vec2{x, y};
-				float magnitude = vec2.magnitude();
+				float magnitude = xy.magnitude();
 				magnitude = std::max(magnitude, min);
-				vec2 = magnitude;
-				x = vec2.x;
-				y = vec2.y;
+				xy = magnitude;
 				});
 			
-			auto max{scene.ecs_registry.view<T::x, T::y, T::translation_magnitude::max>(entt::exclude<T::translation_magnitude::min>)};
-			max.each([](T::x::value_type& x, T::y::value_type& y, const T::translation_magnitude::max::value_type& max)
+			auto max{scene.ecs_registry.view<T::translation, T::translation_magnitude::max>(entt::exclude<T::translation_magnitude::min>)};
+			max.each([](T::translation::value_type& xy, const T::translation_magnitude::max::value_type& max)
 				{
-				utils::math::vec2f vec2{x, y};
-				float magnitude = vec2.magnitude();
+				float magnitude = xy.magnitude();
 				magnitude = std::min(magnitude, max);
-				vec2 = magnitude;
-				x = vec2.x;
-				y = vec2.y;
+				xy = magnitude;
 				});
 			}
 
@@ -174,34 +164,30 @@ namespace iige::ecs::systems
 		template <typename self_t, typename other_t>
 		inline void add_to_self(iige::Scene& scene, float delta_time)
 			{
-			add_to_self_inner<self_t::x    , other_t::x    >(scene, delta_time);
-			add_to_self_inner<self_t::y    , other_t::y    >(scene, delta_time);
-			add_to_self_inner<self_t::angle, other_t::angle>(scene, delta_time);
-			add_to_self_inner<self_t::scale, other_t::scale>(scene, delta_time);
+			add_to_self_inner<self_t::translation, other_t::translation>(scene, delta_time);
+			add_to_self_inner<self_t::rotation   , other_t::rotation   >(scene, delta_time);
+			add_to_self_inner<self_t::scaling    , other_t::scaling    >(scene, delta_time);
 			}
 		template <typename a_t, typename b_t, typename out_t>
 		inline void add_into(iige::Scene& scene, float delta_time)
 			{
-			add_into_inner<a_t::x    , b_t::x    , out_t::x    >(scene, delta_time);
-			add_into_inner<a_t::y    , b_t::y    , out_t::y    >(scene, delta_time);
-			add_into_inner<a_t::angle, b_t::angle, out_t::angle>(scene, delta_time);
-			add_into_inner<a_t::scale, b_t::scale, out_t::scale>(scene, delta_time);
+			add_into_inner<a_t::translation, b_t::translation, out_t::translation>(scene, delta_time);
+			add_into_inner<a_t::rotation   , b_t::rotation   , out_t::rotation   >(scene, delta_time);
+			add_into_inner<a_t::scaling    , b_t::scaling    , out_t::scaling    >(scene, delta_time);
 			}
 		template <typename a_t, typename b_t, typename out_t, typename exclude>
 		inline void add_into_exclude(iige::Scene& scene, float delta_time)
 			{
-			add_into_exclude_inner<a_t::x    , b_t::x    , out_t::x    , exclude::x    >(scene, delta_time);
-			add_into_exclude_inner<a_t::y    , b_t::y    , out_t::y    , exclude::y    >(scene, delta_time);
-			add_into_exclude_inner<a_t::angle, b_t::angle, out_t::angle, exclude::angle>(scene, delta_time);
-			add_into_exclude_inner<a_t::scale, b_t::scale, out_t::scale, exclude::scale>(scene, delta_time);
+			add_into_exclude_inner<a_t::translation, b_t::translation, out_t::translation, exclude::translation>(scene, delta_time);
+			add_into_exclude_inner<a_t::rotation   , b_t::rotation   , out_t::rotation   , exclude::rotation   >(scene, delta_time);
+			add_into_exclude_inner<a_t::scaling    , b_t::scaling    , out_t::scaling    , exclude::scaling    >(scene, delta_time);
 			}
 		template <typename from_t, typename to_t>
 		inline void assign_to(iige::Scene& scene)
 			{
-			assign_to_inner<from_t::x    , to_t::x    >(scene);
-			assign_to_inner<from_t::y    , to_t::y    >(scene);
-			assign_to_inner<from_t::angle, to_t::angle>(scene);
-			assign_to_inner<from_t::scale, to_t::scale>(scene);
+			assign_to_inner<from_t::translation, to_t::translation>(scene);
+			assign_to_inner<from_t::rotation   , to_t::rotation   >(scene);
+			assign_to_inner<from_t::scaling    , to_t::scaling    >(scene);
 			}
 
 		template <typename from_t, typename to_t, typename out_t>
@@ -222,10 +208,9 @@ namespace iige::ecs::systems
 			}
 		inline void mark_moved(iige::Scene& scene)
 			{
-			mark_moved_inner<components::transform::speed::x    >(scene);
-			mark_moved_inner<components::transform::speed::y    >(scene);
-			mark_moved_inner<components::transform::speed::angle>(scene);
-			mark_moved_inner<components::transform::speed::scale>(scene);
+			mark_moved_inner<components::transform::absolute::next::translation>(scene);
+			mark_moved_inner<components::transform::absolute::next::rotation   >(scene);
+			mark_moved_inner<components::transform::absolute::next::scaling    >(scene);
 			}
 
 
@@ -265,30 +250,14 @@ namespace iige::ecs::systems
 				auto parent_id{scene.ecs_registry.get<components::child>(entity).parent};
 
 				auto updated_relative{relative};
-				auto other_axis{0.f}; // Only used for x/y, must update other translation axis even if it has no relative value nor next value.
 
-				if constexpr (components::transform::is_x<relative_t> || components::transform::is_y<relative_t>)
+				if constexpr (components::transform::is_translation<relative_t>)
 					{
-					auto parent_scaling_ptr{get_value_next_if_present_otherwise_current<typename base_t::scale>(scene, parent_id)};
+					auto parent_scaling_ptr{get_value_next_if_present_otherwise_current<typename base_t::scaling>(scene, parent_id)};
 					if (parent_scaling_ptr) { updated_relative *= *parent_scaling_ptr; }
 
-					auto parent_rotation_ptr{get_value_next_if_present_otherwise_current<typename base_t::angle>(scene, parent_id)};
-					if (parent_rotation_ptr)
-						{
-						// Must update other translation axis even if it has no relative value nor next value.
-						if constexpr (components::transform::is_x<relative_t>)
-							{
-							auto my_y_ptr{get_value_next_if_present_otherwise_current<components::transform::relative::y>(scene, entity)};
-							if (my_y_ptr) { other_axis = *my_y_ptr; }
-
-							updated_relative *= parent_rotation_ptr->cos();
-
-							}
-						else
-							{
-							updated_relative *= parent_rotation_ptr->sin();
-							}
-						}
+					auto parent_rotation_ptr{get_value_next_if_present_otherwise_current<typename base_t::rotation>(scene, parent_id)};
+					if (parent_rotation_ptr) { updated_relative += *parent_rotation_ptr; }
 					}
 
 				auto parent_value_ptr{get_value_next_if_present_otherwise_current<absolute_t>(scene, parent_id)};
@@ -296,13 +265,12 @@ namespace iige::ecs::systems
 					{
 					absolute = updated_relative + *parent_value_ptr;
 					}
-				else 
+				else
 					{
 					absolute = updated_relative;
 					}
 				});
 			}
-
 		inline void add_parent(iige::Scene& scene)
 			{
 			// TODO sort only if moved ? and if parent moved ???
@@ -313,14 +281,32 @@ namespace iige::ecs::systems
 					|| (!(clhs.parent == rhs || crhs.next_sibling == lhs) && (clhs.parent < crhs.parent || (clhs.parent == crhs.parent && &clhs < &crhs)));
 				});
 
-			add_parent_inner<components::transform::relative      ::x    , components::transform::absolute      ::x    , components::transform::absolute      >(scene);
-			add_parent_inner<components::transform::relative      ::y    , components::transform::absolute      ::y    , components::transform::absolute      >(scene);
-			add_parent_inner<components::transform::relative      ::angle, components::transform::absolute      ::angle, components::transform::absolute      >(scene);
-			add_parent_inner<components::transform::relative      ::scale, components::transform::absolute      ::scale, components::transform::absolute      >(scene);
-			add_parent_inner<components::transform::relative::next::x    , components::transform::absolute::next::x    , components::transform::absolute::next>(scene);
-			add_parent_inner<components::transform::relative::next::y    , components::transform::absolute::next::y    , components::transform::absolute::next>(scene);
-			add_parent_inner<components::transform::relative::next::angle, components::transform::absolute::next::angle, components::transform::absolute::next>(scene);
-			add_parent_inner<components::transform::relative::next::scale, components::transform::absolute::next::scale, components::transform::absolute::next>(scene);
+			add_parent_inner<components::transform::relative      ::translation, components::transform::absolute      ::translation, components::transform::absolute      >(scene);
+			add_parent_inner<components::transform::relative      ::rotation   , components::transform::absolute      ::rotation   , components::transform::absolute      >(scene);
+			add_parent_inner<components::transform::relative      ::scaling    , components::transform::absolute      ::scaling    , components::transform::absolute      >(scene);
+			add_parent_inner<components::transform::relative::next::translation, components::transform::absolute::next::translation, components::transform::absolute::next>(scene);
+			add_parent_inner<components::transform::relative::next::rotation   , components::transform::absolute::next::rotation   , components::transform::absolute::next>(scene);
+			add_parent_inner<components::transform::relative::next::scaling    , components::transform::absolute::next::scaling    , components::transform::absolute::next>(scene);
+			}
+
+		template <typename if_not_t, typename remove_t>
+		inline void clear_teleports_inner_inner(iige::Scene& scene)
+			{
+			auto view{scene.ecs_registry.view<remove_t>(entt::exclude<if_not_t>)};
+			view.each([&](entt::entity entity, const remove_t&) { scene.ecs_registry.remove<remove_t>(entity); });
+			}
+		template <typename T>
+		inline void clear_teleports_inner(iige::Scene& scene)
+			{
+			clear_teleports_inner_inner<components::transform::speed::translation, T::next::translation>(scene);
+			clear_teleports_inner_inner<components::transform::speed::rotation   , T::next::rotation   >(scene);
+			clear_teleports_inner_inner<components::transform::speed::scaling    , T::next::scaling    >(scene);
+			}
+		template <typename T>
+		inline void clear_teleports(iige::Scene& scene)
+			{
+			clear_teleports_inner<components::transform::absolute>(scene);
+			clear_teleports_inner<components::transform::relative>(scene);
 			}
 		}
 
@@ -329,7 +315,7 @@ namespace iige::ecs::systems
 		{
 		scene.ecs_registry.clear<components::transform::moved>();
 		details::mark_moved(scene);
-		details::mark_moved_inner<components::transform::absolute::x>(scene);
+		//details::mark_moved_inner<components::transform::absolute::translation>(scene);
 		
 		// Speed and acceleration
 		details::apply_constraints          <components::transform::acceleration                                                                                        >(scene);
@@ -351,7 +337,10 @@ namespace iige::ecs::systems
 
 		// Absolute based on relative
 		details::add_parent                                                                                                                                              (scene);
-		
+
+		details::clear_teleports<components::transform::absolute                                                                                                        >(scene);
+		details::clear_teleports<components::transform::relative                                                                                                        >(scene);
+
 		
 		details::apply_constraints<components::transform::absolute::next, components::transform::absolute                                                               >(scene);
 		move_colliders<components::colliders::point                >(scene);
@@ -369,9 +358,8 @@ namespace iige::ecs::systems
 
 	inline void interpolate(iige::Scene& scene, float interpolation)
 		{
-		details::interpolate_inner<components::transform::absolute::x    , components::transform::absolute::next::x    , components::transform::interpolated::x    >(scene, interpolation);
-		details::interpolate_inner<components::transform::absolute::y    , components::transform::absolute::next::y    , components::transform::interpolated::y    >(scene, interpolation);
-		details::interpolate_inner<components::transform::absolute::angle, components::transform::absolute::next::angle, components::transform::interpolated::angle>(scene, interpolation);
-		details::interpolate_inner<components::transform::absolute::scale, components::transform::absolute::next::scale, components::transform::interpolated::scale>(scene, interpolation);
+		details::interpolate_inner<components::transform::absolute::translation, components::transform::absolute::next::translation, components::transform::interpolated::translation>(scene, interpolation);
+		details::interpolate_inner<components::transform::absolute::rotation   , components::transform::absolute::next::rotation   , components::transform::interpolated::rotation   >(scene, interpolation);
+		details::interpolate_inner<components::transform::absolute::scaling    , components::transform::absolute::next::scaling    , components::transform::interpolated::scaling    >(scene, interpolation);
 		}
 	}

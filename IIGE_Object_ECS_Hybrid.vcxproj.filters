@@ -86,5 +86,8 @@
     <ClInclude Include="types\core.h">
       <Filter>Header Files\types</Filter>
     </ClInclude>
+    <ClInclude Include="entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

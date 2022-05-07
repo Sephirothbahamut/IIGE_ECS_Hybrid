@@ -176,6 +176,7 @@
     <ClInclude Include="ecs\systems\collision.h" />
     <ClInclude Include="ecs\systems\draw.h" />
     <ClInclude Include="ecs\systems\move.h" />
+    <ClInclude Include="entity.h" />
     <ClInclude Include="Loop.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="types\core.h" />

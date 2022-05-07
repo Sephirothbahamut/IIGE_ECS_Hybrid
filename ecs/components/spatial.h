@@ -12,193 +12,109 @@
 
 namespace iige::ecs::components::transform
 	{
-	//namespace details
-	//	{
-	//	template <typename T, utils::compile_time::template_string name>
-	//	struct element : component<T, name>
-	//		{
-	//		using component<T, name>::component;
-	//		using min = component<T, utils::compile_time::concat<name, "_min">()>;
-	//		using max = component<T, utils::compile_time::concat<name, "_max">()>;
-	//		};
-	//	
-	//	template <utils::compile_time::template_string name>
-	//	struct has_translation_magnitude
-	//		{
-	//		struct translation_magnitude
-	//			{
-	//			using min = component<float, utils::compile_time::concat<name, "_translation_magnitude_min">()>;
-	//			using max = component<float, utils::compile_time::concat<name, "_translation_magnitude_max">()>;
-	//			};
-	//		};
-	//
-	//	template <utils::compile_time::template_string name>
-	//	struct has_next
-	//		{
-	//		struct next
-	//			{
-	//			using x     = component<float     , utils::compile_time::concat<name, "_next_x"    >()>;
-	//			using y     = component<float     , utils::compile_time::concat<name, "_next_y"    >()>;
-	//			using angle = component<angle::rad, utils::compile_time::concat<name, "_next_angle">()>;
-	//			using scale = component<float     , utils::compile_time::concat<name, "_next_scale">()>;
-	//			};
-	//		};
-	//
-	//	template <utils::compile_time::template_string name, template<utils::compile_time::template_string> class ...Ts>
-	//	struct base : Ts<name>... 
-	//		{
-	//		using x     = element<float     , utils::compile_time::concat<name, "_x"        >()>;
-	//		using y     = element<float     , utils::compile_time::concat<name, "_y"        >()>;
-	//		using angle = element<angle::rad, utils::compile_time::concat<name, "_angle"    >()>;
-	//		using scale = element<float     , utils::compile_time::concat<name, "_scale"    >()>;
-	//		};
-	//	}
-	//
-	//using relative     = details::base<"relative"    , details::has_next>;
-	//using absolute     = details::base<"absolute"    , details::has_next>;
-	//using interpolated = details::base<"interpolated">;
-	//using speed        = details::base<"speed"       , details::has_translation_magnitude>;
-	//using acceleration = details::base<"acceleration", details::has_translation_magnitude>;
-
 	struct relative
 		{
-		struct x     : component<float, "relative_x"    > 
+		struct translation : component<vec2f, "relative_translation"    > 
 			{ 
-			using component<float, "relative_x">::component;
-			using min = component<float, "relative_x_min">; 
-			using max = component<float, "relative_x_max">; 
+			using component<vec2f, "relative_translation">::component;
+			using min = component<vec2f, "relative_translation_min">; 
+			using max = component<vec2f, "relative_translation_max">; 
 			};
-		struct y     : component<float, "relative_y"    > 
+		struct rotation : component<iige::angle::rad, "relative_rotation"> 
 			{
-			using component<float, "relative_y">::component;
-			using min = component<float, "relative_y_min">;
-			using max = component<float, "relative_y_max">; 
+			using component<iige::angle::rad, "relative_rotation">::component;
+			using min = component<iige::angle::rad, "relative_rotation_min">;
+			using max = component<iige::angle::rad, "relative_rotation_max">;
 			};
-		struct angle : component<iige::angle::rad, "relative_angle"> 
+		struct scaling : component<float, "relative_scaling"> 
 			{
-			using component<iige::angle::rad, "relative_angle">::component;
-			using min = component<iige::angle::rad, "relative_angle_min">;
-			using max = component<iige::angle::rad, "relative_angle_max">;
-			};
-		struct scale : component<float, "relative_scale"> 
-			{
-			using component<float, "relative_scale">::component;
-			using min = component<float, "relative_scale_min">; 
-			using max = component<float, "relative_scale_max">; 
+			using component<float, "relative_scaling">::component;
+			using min = component<float, "relative_scaling_min">; 
+			using max = component<float, "relative_scaling_max">; 
 			};
 		struct next
 			{
-			struct x     : component<float           , "relative_next_x"    > 
-				{ 
-				using      component<float           , "relative_next_x"    >::component;
-				using current_t = relative::x;
+			struct translation : component<vec2f, "relative_next_translation"    >
+				{
+				using component<vec2f, "relative_next_translation">::component;
+				using current_t = relative::translation;
 				};
-			struct y     : component<float           , "relative_next_y"    > 
+			struct rotation : component<iige::angle::rad, "relative_next_rotation"> 
 				{ 
-				using      component<float           , "relative_next_y"    >::component;
-				using current_t = relative::y;
+				using      component<iige::angle::rad, "relative_next_rotation">::component;
+				using current_t = relative::rotation;
 				};
-			struct angle : component<iige::angle::rad, "relative_next_angle"> 
+			struct scaling : component<float           , "relative_next_scaling"> 
 				{ 
-				using      component<iige::angle::rad, "relative_next_angle">::component;
-				using current_t = relative::angle;
-				};
-			struct scale : component<float           , "relative_next_scale"> 
-				{ 
-				using      component<float           , "relative_next_scale">::component;
-				using current_t = relative::scale;
+				using      component<float           , "relative_next_scaling">::component;
+				using current_t = relative::scaling;
 				};
 			};
 		};
 	struct absolute
 		{
-		struct x : component<float, "absolute_x">
+		struct translation : component<vec2f, "absolute_translation"    >
 			{
-			using component<float, "absolute_x">::component;
-			using min = component<float, "absolute_x_min">;
-			using max = component<float, "absolute_x_max">;
+			using component<vec2f, "absolute_translation">::component;
+			using min = component<vec2f, "absolute_translation_min">;
+			using max = component<vec2f, "absolute_translation_max">;
 			};
-		struct y : component<float, "absolute_y">
+		struct rotation : component<iige::angle::rad, "absolute_rotation">
 			{
-			using component<float, "absolute_y">::component;
-			using min = component<float, "absolute_y_min">;
-			using max = component<float, "absolute_y_max">;
+			using component<iige::angle::rad, "absolute_rotation">::component;
+			using min = component<iige::angle::rad, "absolute_rotation_min">;
+			using max = component<iige::angle::rad, "absolute_rotation_max">;
 			};
-		struct angle : component<iige::angle::rad, "absolute_angle">
+		struct scaling : component<float, "absolute_scaling">
 			{
-			using component<iige::angle::rad, "absolute_angle">::component;
-			using min = component<iige::angle::rad, "absolute_angle_min">;
-			using max = component<iige::angle::rad, "absolute_angle_max">;
-			};
-		struct scale : component<float, "absolute_scale">
-			{
-			using component<float, "absolute_scale">::component;
-			using min = component<float, "absolute_scale_min">;
-			using max = component<float, "absolute_scale_max">;
+			using component<float, "absolute_scaling">::component;
+			using min = component<float, "absolute_scaling_min">;
+			using max = component<float, "absolute_scaling_max">;
 			};
 		struct next
 			{
-			struct x     : component<float           , "absolute_next_x"    > 
-				{ 
-				using      component<float           , "absolute_next_x"    >::component;
-				using current_t = absolute::x;
+			struct translation : component<vec2f, "absolute_next_translation"    >
+				{
+				using component<vec2f, "absolute_next_translation">::component;
+				using current_t = absolute::translation;
 				};
-			struct y     : component<float           , "absolute_next_y"    > 
+			struct rotation : component<iige::angle::rad, "absolute_next_rotation"> 
 				{ 
-				using      component<float           , "absolute_next_y"    >::component;
-				using current_t = absolute::y;
+				using      component<iige::angle::rad, "absolute_next_rotation">::component;
+				using current_t = absolute::rotation;
 				};
-			struct angle : component<iige::angle::rad, "absolute_next_angle"> 
+			struct scaling : component<float           , "absolute_next_scaling"> 
 				{ 
-				using      component<iige::angle::rad, "absolute_next_angle">::component;
-				using current_t = absolute::angle;
-				};
-			struct scale : component<float           , "absolute_next_scale"> 
-				{ 
-				using      component<float           , "absolute_next_scale">::component;
-				using current_t = absolute::scale;
+				using      component<float           , "absolute_next_scaling">::component;
+				using current_t = absolute::scaling;
 				};
 			};
 		};
 	struct interpolated
 		{
-		using x     = component<float, "interpolated_x">;
-		using y     = component<float, "interpolated_y">;
-		using angle = component<iige::angle::rad, "interpolated_angle">;
-		using scale = component<float, "interpolated_scale">;
+		using translation = component<vec2f, "interpolated_translation">;
+		using rotation = component<iige::angle::rad, "interpolated_rotation">;
+		using scaling = component<float, "interpolated_scaling">;
 		};
 	struct speed
 		{
-		struct x : component<float, "speed_x">
+		struct translation : component<vec2f, "speed_translation"    >
 			{
-			using component<float, "speed_x">::component;
-			using min = component<float, "speed_x_min">;
-			using max = component<float, "speed_x_max">;
+			using component<vec2f, "speed_translation">::component;
+			using min = component<vec2f, "speed_translation_min">;
+			using max = component<vec2f, "speed_translation_max">;
 			};
-		struct y : component<float, "speed_y">
+		struct rotation : component<iige::angle::rad, "speed_rotation">
 			{
-			using component<float, "speed_y">::component;
-			using min = component<float, "speed_y_min">;
-			using max = component<float, "speed_y_max">;
+			using component<iige::angle::rad, "speed_rotation">::component;
+			using min = component<iige::angle::rad, "speed_rotation_min">;
+			using max = component<iige::angle::rad, "speed_rotation_max">;
 			};
-		struct angle : component<iige::angle::rad, "speed_angle">
+		struct scaling : component<float, "speed_scaling">
 			{
-			using component<iige::angle::rad, "speed_angle">::component;
-			using min = component<iige::angle::rad, "speed_angle_min">;
-			using max = component<iige::angle::rad, "speed_angle_max">;
-			};
-		struct scale : component<float, "speed_scale">
-			{
-			using component<float, "speed_scale">::component;
-			using min = component<float, "speed_scale_min">;
-			using max = component<float, "speed_scale_max">;
-			};
-		struct next
-			{
-			using x = component<float, "speed_next_x">;
-			using y = component<float, "speed_next_y">;
-			using angle = component<iige::angle::rad, "speed_next_angle">;
-			using scale = component<float, "speed_next_scale">;
+			using component<float, "speed_scaling">::component;
+			using min = component<float, "speed_scaling_min">;
+			using max = component<float, "speed_scaling_max">;
 			};
 		struct translation_magnitude
 			{
@@ -208,36 +124,23 @@ namespace iige::ecs::components::transform
 		};
 	struct acceleration
 		{
-		struct x : component<float, "acceleration_x">
+		struct translation : component<vec2f, "acceleration_translation"    >
 			{
-			using component<float, "acceleration_x">::component;
-			using min = component<float, "acceleration_x_min">;
-			using max = component<float, "acceleration_x_max">;
+			using component<vec2f, "acceleration_translation">::component;
+			using min = component<vec2f, "acceleration_translation_min">;
+			using max = component<vec2f, "acceleration_translation_max">;
 			};
-		struct y : component<float, "acceleration_y">
+		struct rotation : component<iige::angle::rad, "acceleration_rotation">
 			{
-			using component<float, "acceleration_y">::component;
-			using min = component<float, "acceleration_y_min">;
-			using max = component<float, "acceleration_y_max">;
+			using component<iige::angle::rad, "acceleration_rotation">::component;
+			using min = component<iige::angle::rad, "acceleration_rotation_min">;
+			using max = component<iige::angle::rad, "acceleration_rotation_max">;
 			};
-		struct angle : component<iige::angle::rad, "acceleration_angle">
+		struct scaling : component<float, "acceleration_scaling">
 			{
-			using component<iige::angle::rad, "acceleration_angle">::component;
-			using min = component<iige::angle::rad, "acceleration_angle_min">;
-			using max = component<iige::angle::rad, "acceleration_angle_max">;
-			};
-		struct scale : component<float, "acceleration_scale">
-			{
-			using component<float, "acceleration_scale">::component;
-			using min = component<float, "acceleration_scale_min">;
-			using max = component<float, "acceleration_scale_max">;
-			};
-		struct next
-			{
-			using x = component<float, "acceleration_next_x">;
-			using y = component<float, "acceleration_next_y">;
-			using angle = component<iige::angle::rad, "acceleration_next_angle">;
-			using scale = component<float, "acceleration_next_scale">;
+			using component<float, "acceleration_scaling">::component;
+			using min = component<float, "acceleration_scaling_min">;
+			using max = component<float, "acceleration_scaling_max">;
 			};
 		struct translation_magnitude
 			{
@@ -253,23 +156,21 @@ namespace iige::ecs::components::transform
 
 
 	template <typename T>
-	concept is_x = ::utils::concepts::any_of<T, absolute::x, absolute::next::x, relative::x, relative::next::x, speed::x, acceleration::x, interpolated::x>;
+	concept is_translation = ::utils::concepts::any_of<T, absolute::translation, absolute::next::translation, relative::translation, relative::next::translation, speed::translation, acceleration::translation, interpolated::translation>;
 	template <typename T>
-	concept is_y = ::utils::concepts::any_of<T, absolute::y, absolute::next::y, relative::y, relative::next::y, speed::y, acceleration::y, interpolated::y>;
+	concept is_rotation = ::utils::concepts::any_of<T, absolute::rotation, absolute::next::rotation, relative::rotation, relative::next::rotation, speed::rotation, acceleration::rotation, interpolated::rotation>;
 	template <typename T>
-	concept is_angle = ::utils::concepts::any_of<T, absolute::angle, absolute::next::angle, relative::angle, relative::next::angle, speed::angle, acceleration::angle, interpolated::angle>;
-	template <typename T>
-	concept is_scale = ::utils::concepts::any_of<T, absolute::scale, absolute::next::scale, relative::scale, relative::next::scale, speed::scale, acceleration::scale, interpolated::scale>;
+	concept is_scaling = ::utils::concepts::any_of<T, absolute::scaling, absolute::next::scaling, relative::scaling, relative::next::scaling, speed::scaling, acceleration::scaling, interpolated::scaling>;
 
 	template <typename T>
 	concept is_next = ::utils::concepts::any_of
 		<T, 
-		absolute::next::x, absolute::next::y, absolute::next::angle, absolute::next::scale, 
-		relative::next::x, relative::next::y, relative::next::angle, relative::next::scale
+		absolute::next::translation, absolute::next::rotation, absolute::next::scaling, 
+		relative::next::translation, relative::next::rotation, relative::next::scaling
 		>;
 
 	template <typename T>
-	concept is_transform_component = is_x<T> || is_y<T> || is_angle<T> || is_scale<T>;
+	concept is_transform_component = is_translation<T> || is_rotation<T> || is_scaling<T>;
 	}
 
 namespace iige::ecs::components
