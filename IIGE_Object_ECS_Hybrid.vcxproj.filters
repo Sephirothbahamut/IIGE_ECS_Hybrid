@@ -28,6 +28,9 @@
     <Filter Include="Header Files\types">
       <UniqueIdentifier>{7f2aac7e-464d-455d-8dcb-cf64d900417e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ecs\systems\draw">
+      <UniqueIdentifier>{ee466855-4e5b-4d10-89b1-7526c9653888}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -87,6 +90,18 @@
       <Filter>Header Files\types</Filter>
     </ClInclude>
     <ClInclude Include="entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Systems_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs\systems\draw\colliders.h">
+      <Filter>Header Files\ecs\systems\draw</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs\systems\system.h">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

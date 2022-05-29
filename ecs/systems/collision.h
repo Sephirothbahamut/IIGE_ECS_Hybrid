@@ -16,8 +16,8 @@
 #include "../components/spatial.h"
 #include "../../types/core.h"
 
-#include "../../Window.h"
-#include "../../Scene.h"
+#include "../../window.h"
+#include "../../scene.h"
 
 
 
@@ -26,14 +26,14 @@ namespace iige::ecs::systems
 	class collision
 		{
 		public:
-			virtual void operator()(iige::Scene& scene) const noexcept = 0;
+			virtual void operator()(iige::scene& scene) const noexcept = 0;
 		};
 
 	template <size_t layers_count>
 	class collision_impl : public collision
 		{
 		public:
-			virtual void operator()(iige::Scene& scene) const noexcept final override
+			virtual void operator()(iige::scene& scene) const noexcept final override
 				{
 				scene.ecs_registry.clear<components::collided_with>();
 				scene.ecs_registry.clear<components::collision_data>();
@@ -45,7 +45,7 @@ namespace iige::ecs::systems
 		private:
 #pragma optimize("", off)
 			template<size_t layer>
-			void evaluate(iige::Scene& scene) const noexcept
+			void evaluate(iige::scene& scene) const noexcept
 				{
 				auto targets{scene.ecs_registry.view<components::has_collision<layer>, components::colliders::details::bounding_aabb, components::colliders::details::ptr>()};
 				auto active {scene.ecs_registry.view<components::collides_with<layer>, components::colliders::details::bounding_aabb, components::colliders::details::ptr>()};
@@ -117,101 +117,4 @@ namespace iige::ecs::systems
 				}
 #pragma optimize("", on)
 		};
-
-	inline void update_colliders_vertex_array(const shapes::segment         & shape, sf::VertexArray& va, sf::Color c)
-		{
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.a), c}); va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.b), c});
-		}
-	inline void update_colliders_vertex_array(const shapes::circle          & shape, sf::VertexArray& va, sf::Color c)
-		{
-		iige::vec2f right{iige::vec2f::right() * shape.radius};
-		iige::vec2f vec  {iige::vec2f::right() * shape.radius};
-
-		utils::math::angle::deg delta_α{1000 /shape.radius};
-
-		using namespace utils::math::angle::literals;
-		for (utils::math::angle::deg α = delta_α; α.value < utils::math::angle::deg::full_angle; α += delta_α)
-			{
-			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
-			vec = right + α;
-			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
-			}
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(vec + shape.center), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(right + shape.center), c});
-		}
-	inline void update_colliders_vertex_array(const shapes::polygon         & shape, sf::VertexArray& va, sf::Color c)
-		{
-		for (const auto& edge : shape.get_edges())
-			{
-			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.a), c});
-			va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(edge.b), c});
-			}
-		}
-	inline void update_colliders_vertex_array(const shapes::aabb            & shape, sf::VertexArray& va, sf::Color c)
-		{
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ur), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dr), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dr), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.dl), c});
-		va.append(sf::Vertex{utils::math::vec_cast<sf::Vector2, float>(shape.ul), c});
-		}
-	inline void update_colliders_vertex_array(const shapes::point           & shape, sf::VertexArray& va, sf::Color c)
-			{
-			shapes::aabb aabb{.ll{shape.x - 1}, .up{shape.y - 1}, .rr{shape.x + 1}, .dw{shape.y + 1}};
-			update_colliders_vertex_array(aabb, va, c);
-			}
-	inline void update_colliders_vertex_array(const utils::math::geometry::continuous_point& shape, sf::VertexArray& va, sf::Color c)
-		{
-		update_colliders_vertex_array(shape.a, va, c);
-		update_colliders_vertex_array(static_cast<shapes::segment>(shape), va, c);
-
-		vec2f arrow_hand_ll{shape.b + (shape.perpendicular_left () * 4.f) - (shape.forward() * 4.f)};
-		vec2f arrow_hand_rr{shape.b + (shape.perpendicular_right() * 4.f) - (shape.forward() * 4.f)};
-		update_colliders_vertex_array(shapes::segment{shape.b, arrow_hand_ll}, va, c);
-		update_colliders_vertex_array(shapes::segment{shape.b, arrow_hand_rr}, va, c);
-		}
-
-	template <components::colliders::is_collider T>
-	inline void update_colliders_vertex_array(iige::Scene& scene, sf::VertexArray& va)
-		{
-		auto colliders_not_colliding{scene.ecs_registry.view<T>(entt::exclude<components::collided_with>)};
-		auto colliders_____colliding{scene.ecs_registry.view<T, components::collided_with>()};
-
-		sf::Color c;
-
-		c = sf::Color::White;
-		colliders_not_colliding.each([&](entt::entity entity, const T& shape)
-			{
-			update_colliders_vertex_array(shape.value(), va, c);
-			});
-		c = sf::Color::Red;
-		colliders_____colliding.each([&](entt::entity entity, const T& shape, components::collided_with)
-			{
-			update_colliders_vertex_array(shape.value(), va, c);
-			});
-		}
-
-	inline sf::VertexArray& update_colliders_vertex_array(iige::Scene& scene, sf::VertexArray& va)
-		{
-		va.clear();
-
-		update_colliders_vertex_array<components::colliders::point                 >(scene, va);
-		update_colliders_vertex_array<components::colliders::segment               >(scene, va);
-		update_colliders_vertex_array<components::colliders::aabb                  >(scene, va);
-		update_colliders_vertex_array<components::colliders::circle                >(scene, va);
-		update_colliders_vertex_array<components::colliders::polygon               >(scene, va);
-		update_colliders_vertex_array<components::colliders::convex_polygon        >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_aabb           >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_circle         >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_polygon        >(scene, va);
-		update_colliders_vertex_array<components::colliders::hollow_convex_polygon >(scene, va);
-		update_colliders_vertex_array<components::colliders::continuous_point      >(scene, va);
-		
-		//update_colliders_vertex_array<components::colliders::details::bounding_aabb>(scene, va);
-
-		return va;
-		}
 	}

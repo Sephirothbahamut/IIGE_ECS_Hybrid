@@ -5,7 +5,7 @@
 
 namespace iige
 	{
-	class Display
+	class display
 		{
 		public:
 			static utils::math::vec2u get_screen_size()
@@ -15,25 +15,25 @@ namespace iige
 				}
 		};
 
-	class Window
+	class window
 		{
 		public:
 			struct create_info
 				{
 				utils::math::vec2u size{800, 600};
-				utils::math::vec2i position{static_cast<int>(Display::get_screen_size().x) / 2, static_cast<int>(Display::get_screen_size().y) / 2};
-				std::string title{"Window"};
+				utils::math::vec2i position{static_cast<int>(display::get_screen_size().x) / 2, static_cast<int>(display::get_screen_size().y) / 2};
+				std::string title{"iige::window"};
 				};
 
-			Window(const create_info& create_info) : sf_window{sf::VideoMode{create_info.size.x, create_info.size.y}, create_info.title, sf::Style::Resize, sf::ContextSettings{0, 0, 8}}
+			window(const create_info& create_info) : sf_window{sf::VideoMode{create_info.size.x, create_info.size.y}, create_info.title, sf::Style::Resize, sf::ContextSettings{0, 0, 8}}
 				{
 				sf_window.setPosition(utils::math::vec_cast<sf::Vector2, int>(create_info.position));
 				}
 
-			Window(const Window& copy)            = delete;
-			Window& operator=(const Window& copy) = delete;
-			Window(Window&& move) noexcept        = default;
-			Window& operator=(Window&& move)      = default;
+			window(const window& copy)            = delete;
+			window& operator=(const window& copy) = delete;
+			window(window&& move) noexcept        = default;
+			window& operator=(window&& move)      = default;
 
 			bool poll_event(sf::Event& event)
 				{

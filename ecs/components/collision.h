@@ -51,7 +51,7 @@
 #include "component.h"
 #include "../exceptions.h"
 #include "spatial.h"
-#include "../../Scene.h"
+#include "../../scene.h"
 
 namespace iige::ecs::components
 	{

@@ -1,17 +1,14 @@
 #pragma once
 
+#include <utils/variadic.h>
+
 #include "ecs/entt.h"
 #include "ecs/components/spatial.h"
 
 namespace iige
 	{
 
-
-
-
-
-	//template <typename ...Ts>
-	class Scene
+	class scene
 		{
 		friend class entity;
 		public:
@@ -27,16 +24,18 @@ namespace iige
 
 			entt::registry ecs_registry;
 
-			// TODO:
-			// If a component is non-next absolute or relative, it MUST be const
-			//
-
-			template<typename component_t, typename... other_components_t, typename... excluded_ts>
-			[[nodiscard]] entt::basic_view<entt::registry::entity_type, entt::get_t<component_t, other_components_t...>, entt::exclude_t<excluded_ts...>> view(entt::exclude_t<excluded_ts...> = {})
+			template<typename ... component_ts, typename... excluded_ts>
+			[[nodiscard]] entt::basic_view<entt::registry::entity_type, entt::get_t<component_ts...>, entt::exclude_t<excluded_ts...>> view(entt::exclude_t<excluded_ts...> = {})
 				{
-				
+				// TODO do these checks in the parameters of the .each lambda called in our view wrapper, not here.
+				static_assert (
+					(((iige::ecs::components::transform::is_absolute<component_ts> && !iige::ecs::components::transform::is_next<component_ts>) ? std::is_const_v<component_ts> : true) && ...) ||
+					(((iige::ecs::components::transform::is_relative<component_ts> && !iige::ecs::components::transform::is_next<component_ts>) ? std::is_const_v<component_ts> : true) && ...),
+					"Current transform state cannot be changed manually. Query transform componenets as const. If you want to modify any transform component, query [transform]::next::[component] instead."
+					);
+					
 
-				return ecs_registry.view<component_t, other_components_t..., excluded_ts...>();
+				return ecs_registry.view<component_ts..., excluded_ts...>();
 				}
 
 			template <typename component_t, typename ... arg_ts>

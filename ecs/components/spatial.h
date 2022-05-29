@@ -104,6 +104,12 @@ namespace iige::ecs::components::transform
 			using min = component<vec2f, "speed_translation_min">;
 			using max = component<vec2f, "speed_translation_max">;
 			};
+		struct directional : component<vec2f, "speed_directional"    >
+			{
+			using component<vec2f, "speed_directional">::component;
+			using min = component<vec2f, "speed_directional_min">;
+			using max = component<vec2f, "speed_directional_max">;
+			};
 		struct rotation : component<iige::angle::rad, "speed_rotation">
 			{
 			using component<iige::angle::rad, "speed_rotation">::component;
@@ -130,6 +136,12 @@ namespace iige::ecs::components::transform
 			using min = component<vec2f, "acceleration_translation_min">;
 			using max = component<vec2f, "acceleration_translation_max">;
 			};
+		struct directional : component<vec2f, "acceleration_directional"    >
+			{
+			using component<vec2f, "acceleration_directional">::component;
+			using min = component<vec2f, "acceleration_directional_min">;
+			using max = component<vec2f, "acceleration_directional_max">;
+			};
 		struct rotation : component<iige::angle::rad, "acceleration_rotation">
 			{
 			using component<iige::angle::rad, "acceleration_rotation">::component;
@@ -154,16 +166,30 @@ namespace iige::ecs::components::transform
 		};
 
 
+	// Transform types
+	template <typename T>
+	concept is_absolute = ::utils::concepts::undecorated_any_of<T, absolute::translation, absolute::next::translation, absolute::rotation, absolute::next::rotation, absolute::scaling, absolute::next::scaling>;
+	template <typename T>
+	concept is_relative = ::utils::concepts::undecorated_any_of<T, relative::translation, relative::next::translation, relative::rotation, relative::next::rotation, relative::scaling, relative::next::scaling>;
+	template <typename T>
+	concept is_speed        = ::utils::concepts::undecorated_any_of<T, speed::translation, speed::directional, speed::rotation, speed::scaling>;
+	template <typename T>
+	concept is_acceleration = ::utils::concepts::undecorated_any_of < T, acceleration::translation, acceleration::directional, acceleration::rotation, acceleration::scaling > ;
+	template <typename T>
+	concept is_interpolated = ::utils::concepts::undecorated_any_of<T, interpolated::translation, interpolated::rotation, interpolated::scaling>;
+
+	// Transform component types
+	template <typename T>
+	concept is_translation = ::utils::concepts::undecorated_any_of<T, absolute::translation, absolute::next::translation, relative::translation, relative::next::translation, speed::translation, acceleration::translation, interpolated::translation>;
+	template <typename T>
+	concept is_directional = ::utils::concepts::undecorated_any_of<T, speed::directional, acceleration::directional>;
+	template <typename T>
+	concept is_rotation = ::utils::concepts::undecorated_any_of<T, absolute::rotation, absolute::next::rotation, relative::rotation, relative::next::rotation, speed::rotation, acceleration::rotation, interpolated::rotation>;
+	template <typename T>
+	concept is_scaling = ::utils::concepts::undecorated_any_of<T, absolute::scaling, absolute::next::scaling, relative::scaling, relative::next::scaling, speed::scaling, acceleration::scaling, interpolated::scaling>;
 
 	template <typename T>
-	concept is_translation = ::utils::concepts::any_of<T, absolute::translation, absolute::next::translation, relative::translation, relative::next::translation, speed::translation, acceleration::translation, interpolated::translation>;
-	template <typename T>
-	concept is_rotation = ::utils::concepts::any_of<T, absolute::rotation, absolute::next::rotation, relative::rotation, relative::next::rotation, speed::rotation, acceleration::rotation, interpolated::rotation>;
-	template <typename T>
-	concept is_scaling = ::utils::concepts::any_of<T, absolute::scaling, absolute::next::scaling, relative::scaling, relative::next::scaling, speed::scaling, acceleration::scaling, interpolated::scaling>;
-
-	template <typename T>
-	concept is_next = ::utils::concepts::any_of
+	concept is_next = ::utils::concepts::undecorated_any_of
 		<T, 
 		absolute::next::translation, absolute::next::rotation, absolute::next::scaling, 
 		relative::next::translation, relative::next::rotation, relative::next::scaling

@@ -9,9 +9,10 @@
 #include "ecs/systems/move.h"
 #include "ecs/systems/draw.h"
 #include "ecs/systems/collision.h"
-#include "Scene.h"
+#include "scene.h"
+#include "Systems_manager.h"
 
-#include "Window.h"
+#include "window.h"
 
 namespace iige
 	{
@@ -22,39 +23,36 @@ namespace iige
 			class base_loop
 				{
 				protected:
-					utils::observer_ptr<Scene> scene{nullptr};
-					utils::observer_ptr<Window> window{nullptr};
+					utils::observer_ptr<iige::scene > scene {nullptr};
+					utils::observer_ptr<iige::window> window{nullptr};
+					utils::observer_ptr<iige::systems_manager> systems_manager{nullptr};
 					utils::observer_ptr<ecs::systems::collision> collision{nullptr};
-					sf::VertexArray colliders_vertex_array{sf::PrimitiveType::Lines, 3600};
 
 					void step(float delta_time)
 						{
-						Scene& scene  {*this->scene };
-						Window& window{*this->window};
+						iige::scene& scene  {*this->scene };
+						iige::window& window{*this->window};
 
 						sf::Event event;
 						while (window.poll_event(event)) {}
 
 						ecs::systems::move(scene, delta_time);
 						(*collision)(scene);
-						ecs::systems::update_colliders_vertex_array(scene, colliders_vertex_array);
 
-						for (const auto& step_system : step_systems)
+						for (const auto& step_system : systems_manager->step)
 							{
 							step_system(scene, window, delta_time);
 							}
 						}
 					void draw(float delta_time, float interpolation)
 						{
-						Scene& scene  {*this->scene };
-						Window& window{*this->window};
+						iige::scene & scene  {*this->scene };
+						iige::window& window{*this->window};
 
 						window.sf_window.clear();
 						ecs::systems::interpolate(scene, interpolation);
-						ecs::systems::draw(scene, window.sf_window);
-						window.sf_window.draw(colliders_vertex_array);
 						
-						for (const auto& draw_system : draw_systems)
+						for (const auto& draw_system : systems_manager->draw)
 							{
 							draw_system(scene, window, delta_time, interpolation);
 							}
@@ -63,12 +61,9 @@ namespace iige
 						}
 
 				public:
-					base_loop(Scene & scene, Window & window, ecs::systems::collision & collision) noexcept :
-						scene{&scene}, window{&window}, collision{&collision}
+					base_loop(iige::scene & scene, iige::window & window, iige::systems_manager& systems_manager, ecs::systems::collision & collision) noexcept :
+						scene{&scene}, window{&window}, systems_manager{&systems_manager}, collision{&collision}
 						{}
-
-					std::vector<std::function<void(Scene&, Window&, float       )>> step_systems;
-					std::vector<std::function<void(Scene&, Window&, float, float)>> draw_systems;
 
 					virtual void run() = 0;
 				};
@@ -83,16 +78,16 @@ namespace iige
 				sf::Time step_delta_time;
 
 			public:
-				fixed_game_speed_variable_framerate(Scene& scene, Window& window, ecs::systems::collision& collision, float steps_per_second = 1.f, size_t max_frameskip = 5) noexcept :
-					details::base_loop{scene, window, collision},
+				fixed_game_speed_variable_framerate(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision, float steps_per_second = 1.f, size_t max_frameskip = 5) noexcept :
+					details::base_loop{scene, window, systems_manager, collision},
 					steps_per_second{steps_per_second}, max_frameskip{max_frameskip}, step_delta_time{sf::seconds(1.f / steps_per_second)}
 					{}
 
 				virtual void run() final override
 					{
 					// https://dewitters.com/dewitters-gameloop/
-					Scene & scene {*this->scene };
-					Window& window{*this->window};
+					iige::scene & scene {*this->scene };
+					iige::window& window{*this->window};
 
 					sf::Clock clock;
 					sf::Time next_step_time{clock.getElapsedTime()};
@@ -133,16 +128,16 @@ namespace iige
 				sf::Time step_delta_time;
 
 			public:
-				fixed_fps_and_game_speed(Scene& scene, Window& window, ecs::systems::collision& collision, float steps_per_second = 1.f) noexcept :
-					details::base_loop{scene, window, collision},
+				fixed_fps_and_game_speed(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision, float steps_per_second = 1.f) noexcept :
+					details::base_loop{scene, window, systems_manager, collision},
 					steps_per_second{steps_per_second}, step_delta_time{sf::seconds(1.f / steps_per_second)}
 					{}
 
 				void run()
 					{
 					// https://dewitters.com/dewitters-gameloop/
-					Scene & scene {*this->scene };
-					Window& window{*this->window};
+					iige::scene & scene {*this->scene };
+					iige::window& window{*this->window};
 
 					sf::Clock clock;
 
@@ -178,15 +173,15 @@ namespace iige
 			private:
 
 			public:
-				variable_fps_and_game_speed(Scene& scene, Window& window, ecs::systems::collision& collision) noexcept :
-					details::base_loop{scene, window, collision}
+				variable_fps_and_game_speed(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision) noexcept :
+					details::base_loop{scene, window, systems_manager, collision}
 					{}
 
 				void run()
 					{
 					// https://dewitters.com/dewitters-gameloop/
-					Scene & scene {*this->scene };
-					Window& window{*this->window};
+					iige::scene & scene {*this->scene };
+					iige::window& window{*this->window};
 
 					sf::Clock clock;
 

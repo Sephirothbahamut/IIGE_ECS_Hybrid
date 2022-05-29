@@ -4,49 +4,56 @@
 
 #include "../entt.h"
 
-#include "../../Window.h"
-#include "../../Scene.h"
+#include "../../window.h"
+#include "../../scene.h"
 
 #include "../components/bad_draw.h"
 #include "../components/spatial.h"
 
 namespace iige::ecs::systems
 	{
-	void draw(iige::Scene& scene, sf::RenderWindow& window)
+	void bad_draw(iige::scene& scene, iige::window& window, float delta_time, float interpolation)
 		{
 		//TODO figure out compound transform view :|
 
-		if (true)
-			{
-			auto movement_view{scene.ecs_registry.view<components::transform::interpolated::translation, components::bad_draw>()};
-
-			movement_view.each([&](const vec2f& translation, auto& drawable)
+		scene.ecs_registry.view<components::transform::interpolated::translation, components::bad_draw>()
+			.each([](const vec2f& translation, auto& drawable)
 				{
 				drawable.cs.setPosition({translation.x, translation.y});
-				window.draw(drawable.cs);
 				});
-			}
-		if (true)
-			{
-			auto movement_view{scene.ecs_registry.view<components::transform::interpolated::translation, components::transform::interpolated::rotation, components::bad_draw>()};
-
-			movement_view.each([&](const vec2f& translation, const angle::rad& rotation, components::bad_draw& drawable)
+		scene.ecs_registry.view<components::transform::absolute::translation, components::bad_draw>(entt::exclude<components::transform::interpolated::translation>)
+			.each([](const vec2f& translation, auto& drawable)
 				{
 				drawable.cs.setPosition({translation.x, translation.y});
-				drawable.cs.setRotation(static_cast<angle::deg>(rotation).value);
-				window.draw(drawable.cs);
 				});
-			}
-		if (true)
-			{
-			auto movement_view{scene.ecs_registry.view<components::transform::absolute::translation, components::transform::interpolated::rotation, components::bad_draw>(entt::exclude<components::transform::interpolated::translation>)};
 
-			movement_view.each([&](const vec2f& translation, const angle::rad& rotation, components::bad_draw& drawable)
+		scene.ecs_registry.view<components::transform::interpolated::rotation, components::bad_draw>()
+			.each([](const angle::rad& rotation, auto& drawable)
 				{
-				drawable.cs.setPosition({translation.x, translation.y});
-				drawable.cs.setRotation(static_cast<angle::deg>(rotation).value);
-				window.draw(drawable.cs);
+				drawable.cs.setRotation(angle::deg(rotation).value);
 				});
-			}
+		scene.ecs_registry.view<components::transform::absolute::rotation, components::bad_draw>(entt::exclude< components::transform::interpolated::rotation>)
+			.each([](const angle::rad& rotation, auto& drawable)
+				{
+				drawable.cs.setRotation(angle::deg(rotation).value);
+				});
+
+		scene.ecs_registry.view<components::transform::interpolated::scaling, components::bad_draw>()
+			.each([](const float& scaling, auto& drawable)
+				{
+				drawable.cs.setScale({scaling, scaling});
+				});
+		scene.ecs_registry.view<components::transform::absolute::scaling, components::bad_draw>(entt::exclude< components::transform::interpolated::scaling>)
+			.each([](const float& scaling, auto& drawable)
+				{
+				drawable.cs.setScale({scaling, scaling});
+				});
+
+		scene.ecs_registry.view<components::bad_draw>()
+			.each([&window](components::bad_draw& drawable)
+				{
+				window.sf_window.draw(drawable.cs);
+				});
+
 		}
 	}

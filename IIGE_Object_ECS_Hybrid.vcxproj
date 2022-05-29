@@ -130,7 +130,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D "COUT_CONTAINERS"  /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -148,7 +148,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalOptions>/D "COUT_CONTAINERS" %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
@@ -175,10 +175,14 @@
     <ClInclude Include="ecs\exceptions.h" />
     <ClInclude Include="ecs\systems\collision.h" />
     <ClInclude Include="ecs\systems\draw.h" />
+    <ClInclude Include="ecs\systems\draw\colliders.h" />
     <ClInclude Include="ecs\systems\move.h" />
+    <ClInclude Include="ecs\systems\system.h" />
     <ClInclude Include="entity.h" />
+    <ClInclude Include="input.h" />
     <ClInclude Include="Loop.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="Systems_manager.h" />
     <ClInclude Include="types\core.h" />
     <ClInclude Include="types\shapes.h" />
     <ClInclude Include="Window.h" />

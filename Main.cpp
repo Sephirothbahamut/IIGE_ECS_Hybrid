@@ -7,18 +7,19 @@
 #include <utils/definitions.h>
 #include <utils/math/angle.h>
 
-#include "Window.h"
-#include "Scene.h"
+#include "window.h"
+#include "scene.h"
 #include "Loop.h"
 
 #include "ecs/components/bad_draw.h"
 #include "ecs/components/spatial.h"
 #include "ecs/systems/collision.h"
+#include "ecs/systems/draw/colliders.h"
 
 #include <utils/math/geometry/continuous_interactions.h>
 #include <iostream>
 
-void main_shapes(iige::Window& window, iige::Scene& scene)
+void main_shapes(iige::window& window, iige::scene& scene)
 	{
 	utils::math::transform2 t{.translation{200.f, 150.f}, .rotation{}};
 
@@ -92,7 +93,7 @@ void main_shapes(iige::Window& window, iige::Scene& scene)
 		}
 	}
 
-void main_circle_escape(iige::Window& window, iige::Scene& scene)
+void main_circle_escape(iige::window& window, iige::scene& scene)
 	{
 	utils::math::transform2 t{.translation{200.f, 150.f}, .rotation{}};
 
@@ -159,83 +160,115 @@ void main_circle_escape(iige::Window& window, iige::Scene& scene)
 		}
 	}
 
-void main_hierarchy(iige::Window& window, iige::Scene& scene)
+void main_hierarchy(iige::window& window, iige::scene& scene)
 	{
 	using namespace iige::angle::literals;
 
 	auto entity_a{scene.ecs_registry.create()};
 	auto entity_b{scene.ecs_registry.create()};
-	//auto entity_c{scene.ecs_registry.create()};
+	auto entity_c{scene.ecs_registry.create()};
 	iige::shapes::convex_polygon shape_a{{0, -5}, {3, 4}, {-3, 4}};
 	iige::shapes::convex_polygon shape_b{{-4, -4}, {4, -4}, {4, 4}, {-4, 4}};
-	//iige::shapes::convex_polygon shape_c{{0, 5}, {-3, 4}, {3, 4}};
+	iige::shapes::convex_polygon shape_c{{0, 5}, {-3, -4}, {3, -4}};
 
 	iige::ecs::components::add_collision<iige::ecs::components::colliders::convex_polygon>(scene.ecs_registry, entity_a, shape_a);
 	iige::ecs::components::add_collision<iige::ecs::components::colliders::convex_polygon>(scene.ecs_registry, entity_b, shape_b);
+	iige::ecs::components::add_collision<iige::ecs::components::colliders::convex_polygon>(scene.ecs_registry, entity_c, shape_c);
 
-	scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated::rotation      >(entity_a);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated::translation>(entity_b);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated::rotation      >(entity_b);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated::x>(entity_c);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated::y>(entity_c);
+	if (true)
+		{
+		// a stands in place and rotates
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::translation>(entity_a, window.sf_window.getSize().x / 2.f, window.sf_window.getSize().y / 2.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::rotation   >(entity_a);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::rotation   >(entity_a);
 
-	scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::translation>(entity_a, window.sf_window.getSize().x / 2.f, window.sf_window.getSize().y / 2.f);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::rotation>(entity_a);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::rotation>(entity_a);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::rotation>(entity_a, 45_deg);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated  ::rotation   >(entity_a);
+			
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::rotation   >(entity_a, 45_deg);
 
-	scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::translation>(entity_b);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::rotation>(entity_b);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::translation>(entity_b);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::rotation>(entity_b);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::x>(entity_c);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::y>(entity_c);
 
-	scene.ecs_registry.emplace<iige::ecs::components::transform::relative::translation>(entity_b);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::relative::rotation>(entity_b);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::translation>(entity_b);
-	scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::rotation>(entity_b);
+		//forward propulsion?
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed::directional>(entity_a, 100.f, 0.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated::translation   >(entity_a);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::translation   >(entity_a, window.sf_window.getSize().x / 2.f, window.sf_window.getSize().y / 2.f);
+		}
+	if(true)
+		{
+		// b interpolates translation and rotation
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::rotation   >(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::rotation   >(entity_b);
+	
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated  ::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated  ::rotation   >(entity_b);
 
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::x>(entity_c, window.sf_window.getSize().x / 2.f);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::y>(entity_c, window.sf_window.getSize().y / 2.f);
+		// b gets both translation and rotation from its parent
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::rotation   >(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::rotation   >(entity_b);
+		// b moves aaway from its parent
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::translation>(entity_b, 1.f, 0.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::rotation   >(entity_b, 0.f);
+		}
+	if(true)
+		{
+		// c interpolates translation
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::translation>(entity_c);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::rotation   >(entity_c);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::translation>(entity_c);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::rotation   >(entity_c);
+		
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::translation>(entity_c, 10.f, 10.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::rotation   >(entity_c);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::translation>(entity_c, 10.f, 10.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::rotation   >(entity_c);
 
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::x>(entity_c, window.sf_window.getSize().x / 2.f);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::y>(entity_c, window.sf_window.getSize().y / 2.f);
+		// c gets translation from parent
 
-	scene.ecs_registry.emplace<iige::ecs::components::transform::speed::translation>(entity_b, 5.f, 0.f);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::x>(entity_c, window.sf_window.getSize().x / 2.f);
-	//scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::y>(entity_c, window.sf_window.getSize().y / 2.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::translation>(entity_c, 0.f, 0.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::rotation   >(entity_c, 5.f);
+		}
 
 
 	scene.ecs_registry.emplace<iige::ecs::components::child>(entity_b, entity_a);
+	scene.ecs_registry.emplace<iige::ecs::components::child>(entity_c, entity_b);
 
 	scene.ecs_registry.emplace<iige::ecs::components::has_collision<0>>(entity_a);
 	auto& pippo = scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity_a, 16.f);
 	pippo.cs.setFillColor(sf::Color::Red);
 	auto& pluto = scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity_b, 16.f);
 	pluto.cs.setFillColor(sf::Color::Blue);
+	auto& paperino = scene.ecs_registry.emplace<iige::ecs::components::bad_draw>(entity_c, 16.f);
+	paperino.cs.setFillColor(sf::Color::Cyan);
 	}
 
 int main()
 	{
 	using namespace utils::math::angle::literals;
 	
-	iige::Window window{iige::Window::create_info{.size{1024, 768}, .position{10, 10}, .title{"My window"}}};
+	iige::window window{iige::window::create_info{.size{1024, 768}, .position{10, 10}, .title{"My window"}}};
 	
-	iige::Scene scene;
+	iige::scene scene;
 	
-	main_shapes(window, scene);
+	iige::systems_manager systems_manager;
 
 	iige::ecs::systems::collision_impl<1> collision;
 
-	//iige::loop::variable_fps_and_game_speed loop{scene, window, collision};/*/
-	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, collision, 10};/**/
+	iige::loop::variable_fps_and_game_speed loop{scene, window, systems_manager, collision};/*/
+	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, systems_manager, collision, 10};/**/
+
+	iige::ecs::systems::draw::colliders colliders_drawing;
+
+	//systems_manager.draw.emplace(&iige::ecs::systems::bad_draw);
+	systems_manager.emplace(colliders_drawing);
 
 
 	//Entities bouncing system
-	loop.step_systems.emplace_back([&](iige::Scene& scene, iige::Window& window, float delta_time)
+	systems_manager.step.emplace([&](iige::scene& scene, iige::window& window, float delta_time)
 		{
-		auto view{scene.ecs_registry.view<iige::ecs::components::collision_data, iige::ecs::components::transform::speed::translation, iige::ecs::components::transform::absolute::next::translation>()};
+		auto view{scene.view<iige::ecs::components::collision_data, iige::ecs::components::transform::speed::translation, iige::ecs::components::transform::absolute::next::translation>()};
 
 		view.each([&](const iige::ecs::components::collision_data& cdata, iige::vec2f& speed_translation, iige::vec2f& next_translation)
 			{
@@ -247,10 +280,10 @@ int main()
 			});
 		});
 
-	//Window wall bouncing system
-	loop.step_systems.emplace_back([&](iige::Scene& scene, iige::Window& window, float)
+	//iige::window wall bouncing system
+	systems_manager.draw.emplace([&](iige::scene& scene, iige::window& window, float, float)
 		{
-		auto view{scene.ecs_registry.view<iige::ecs::components::transform::absolute::translation, iige::ecs::components::transform::speed::translation>()};
+		auto view{scene.view<iige::ecs::components::transform::absolute::translation, iige::ecs::components::transform::speed::translation>()};
 
 		view.each([&](const iige::vec2f& absolute_translation, iige::vec2f& speed_translation)
 			{
@@ -264,7 +297,8 @@ int main()
 			if (y > window.sf_window.getSize().y && speed_y > 0) { speed_y *= -1; }
 			});
 		});
-	
+
+	main_hierarchy(window, scene);
 	loop.run();
 	
 	return 0;
