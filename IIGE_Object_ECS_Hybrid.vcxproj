@@ -180,6 +180,7 @@
     <ClInclude Include="ecs\systems\system.h" />
     <ClInclude Include="entity.h" />
     <ClInclude Include="input.h" />
+    <ClInclude Include="input_enums.h" />
     <ClInclude Include="Loop.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Systems_manager.h" />

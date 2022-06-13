@@ -9,6 +9,7 @@
 #include "ecs/systems/move.h"
 #include "ecs/systems/draw.h"
 #include "ecs/systems/collision.h"
+#include "input.h"
 #include "scene.h"
 #include "Systems_manager.h"
 
@@ -23,10 +24,11 @@ namespace iige
 			class base_loop
 				{
 				protected:
-					utils::observer_ptr<iige::scene > scene {nullptr};
-					utils::observer_ptr<iige::window> window{nullptr};
-					utils::observer_ptr<iige::systems_manager> systems_manager{nullptr};
-					utils::observer_ptr<ecs::systems::collision> collision{nullptr};
+					utils::observer_ptr<iige::scene            > scene          {nullptr};
+					utils::observer_ptr<iige::window           > window         {nullptr};
+					utils::observer_ptr<iige::systems_manager  > systems_manager{nullptr};
+					utils::observer_ptr<ecs::systems::collision> collision      {nullptr};
+					utils::observer_ptr<input::manager         > input          {nullptr};
 
 					void step(float delta_time)
 						{
@@ -34,7 +36,8 @@ namespace iige
 						iige::window& window{*this->window};
 
 						sf::Event event;
-						while (window.poll_event(event)) {}
+						while (window.poll_event(event)) { input->evaluate_event(event, scene, window, delta_time); }
+						input->events_end(scene, window, delta_time);
 
 						ecs::systems::move(scene, delta_time);
 						(*collision)(scene);
@@ -61,8 +64,8 @@ namespace iige
 						}
 
 				public:
-					base_loop(iige::scene & scene, iige::window & window, iige::systems_manager& systems_manager, ecs::systems::collision & collision) noexcept :
-						scene{&scene}, window{&window}, systems_manager{&systems_manager}, collision{&collision}
+					base_loop(iige::scene & scene, iige::window & window, iige::systems_manager& systems_manager, ecs::systems::collision & collision, input::manager& input) noexcept :
+						scene{&scene}, window{&window}, systems_manager{&systems_manager}, collision{&collision}, input{&input}
 						{}
 
 					virtual void run() = 0;
@@ -78,8 +81,8 @@ namespace iige
 				sf::Time step_delta_time;
 
 			public:
-				fixed_game_speed_variable_framerate(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision, float steps_per_second = 1.f, size_t max_frameskip = 5) noexcept :
-					details::base_loop{scene, window, systems_manager, collision},
+				fixed_game_speed_variable_framerate(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision, input::manager& input, float steps_per_second = 1.f, size_t max_frameskip = 5) noexcept :
+					details::base_loop{scene, window, systems_manager, collision, input},
 					steps_per_second{steps_per_second}, max_frameskip{max_frameskip}, step_delta_time{sf::seconds(1.f / steps_per_second)}
 					{}
 
@@ -128,8 +131,8 @@ namespace iige
 				sf::Time step_delta_time;
 
 			public:
-				fixed_fps_and_game_speed(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision, float steps_per_second = 1.f) noexcept :
-					details::base_loop{scene, window, systems_manager, collision},
+				fixed_fps_and_game_speed(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision, input::manager& input, float steps_per_second = 1.f) noexcept :
+					details::base_loop{scene, window, systems_manager, collision, input},
 					steps_per_second{steps_per_second}, step_delta_time{sf::seconds(1.f / steps_per_second)}
 					{}
 
@@ -173,8 +176,8 @@ namespace iige
 			private:
 
 			public:
-				variable_fps_and_game_speed(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision) noexcept :
-					details::base_loop{scene, window, systems_manager, collision}
+				variable_fps_and_game_speed(iige::scene& scene, iige::window& window, iige::systems_manager& systems_manager, ecs::systems::collision& collision, input::manager& input) noexcept :
+					details::base_loop{scene, window, systems_manager, collision, input}
 					{}
 
 				void run()

@@ -2,6 +2,7 @@
 
 #include <utils/cout_containers.h>
 #include <utils/math/vec2.h>
+#include <utils/enum.h>
 
 #include <random>
 #include <utils/definitions.h>
@@ -10,6 +11,7 @@
 #include "window.h"
 #include "scene.h"
 #include "Loop.h"
+#include "input.h"
 
 #include "ecs/components/bad_draw.h"
 #include "ecs/components/spatial.h"
@@ -244,6 +246,64 @@ void main_hierarchy(iige::window& window, iige::scene& scene)
 	paperino.cs.setFillColor(sf::Color::Cyan);
 	}
 
+template <size_t id>
+struct player {};
+
+
+void main_input(iige::window& window, iige::scene& scene)
+	{
+	using namespace iige::angle::literals;
+
+	auto entity_a{scene.ecs_registry.create()};
+	auto entity_b{scene.ecs_registry.create()};
+	iige::shapes::convex_polygon shape_a{{0, -5}, {3, 4}, {-3, 4}};
+	iige::shapes::convex_polygon shape_b{{-4, -4}, {4, -4}, {4, 4}, {-4, 4}};
+
+	iige::ecs::components::add_collision<iige::ecs::components::colliders::convex_polygon>(scene.ecs_registry, entity_a, shape_a);
+	iige::ecs::components::add_collision<iige::ecs::components::colliders::convex_polygon>(scene.ecs_registry, entity_b, shape_b);
+	
+	if (true)
+		{
+		// a stands in place and rotates
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::translation>(entity_a, window.sf_window.getSize().x / 2.f, window.sf_window.getSize().y / 2.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::translation>(entity_a, window.sf_window.getSize().x / 2.f, window.sf_window.getSize().y / 2.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::rotation   >(entity_a);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::rotation   >(entity_a);
+		
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated  ::translation>(entity_a);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated  ::rotation   >(entity_a);
+			
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::rotation   >(entity_a, 0_deg);
+
+		//forward propulsion?
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed::directional>(entity_a, 0.f, 0.f);
+
+		scene.ecs_registry.emplace<player<0>>(entity_a);
+		}
+	if(true)
+		{
+		// b interpolates translation and rotation
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute      ::rotation   >(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::absolute::next::rotation   >(entity_b);
+	
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated  ::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::interpolated  ::rotation   >(entity_b);
+
+		// b gets both translation and rotation from its parent
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative      ::rotation   >(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::translation>(entity_b);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::relative::next::rotation   >(entity_b);
+		// b moves aaway from its parent
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::translation>(entity_b, 1.f, 0.f);
+		scene.ecs_registry.emplace<iige::ecs::components::transform::speed         ::rotation   >(entity_b, 0.f);
+		}
+
+	scene.ecs_registry.emplace<iige::ecs::components::child>(entity_b, entity_a);
+	}
+
 int main()
 	{
 	using namespace utils::math::angle::literals;
@@ -256,7 +316,9 @@ int main()
 
 	iige::ecs::systems::collision_impl<1> collision;
 
-	iige::loop::variable_fps_and_game_speed loop{scene, window, systems_manager, collision};/*/
+	iige::input::manager input;
+
+	iige::loop::variable_fps_and_game_speed loop{scene, window, systems_manager, collision, input};/*/
 	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, systems_manager, collision, 10};/**/
 
 	iige::ecs::systems::draw::colliders colliders_drawing;
@@ -298,7 +360,116 @@ int main()
 			});
 		});
 
-	main_hierarchy(window, scene);
+	if (true)
+		{
+		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.y = -10; });
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.y = 0; });
+			}})};
+		input.button_actions.associate_action(print_action, iige::input::keyboard_key::W);
+		}
+	if (true)
+		{
+		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.y = 10; });
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.y = 0; });
+			}})};
+		input.button_actions.associate_action(print_action, iige::input::keyboard_key::S);
+		}
+	if (true)
+		{
+		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.x = -10; });
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.x = 0; });
+			}})};
+		input.button_actions.associate_action(print_action, iige::input::keyboard_key::Q);
+		}
+	if (true)
+		{
+		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.x = 10; });
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+			view.each([](iige::vec2f& directional) { directional.x = 0; });
+			}})};
+		input.button_actions.associate_action(print_action, iige::input::keyboard_key::E);
+		}
+	if (true)
+		{
+		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+			view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{-90}); });
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+			view.each([](iige::angle::rad& dir) { dir.value = 0; });
+			}})};
+		input.button_actions.associate_action(print_action, iige::input::keyboard_key::A);
+		}
+	if (true)
+		{
+		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+			view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{90}); });
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			},
+			[](iige::scene& scene, iige::window& window, float delta_time)
+			{
+			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+			view.each([](iige::angle::rad& dir) { dir.value = 0; });
+			}})};
+		input.button_actions.associate_action(print_action, iige::input::keyboard_key::D);
+		}
+
+	main_input(window, scene);
 	loop.run();
 	
 	return 0;
