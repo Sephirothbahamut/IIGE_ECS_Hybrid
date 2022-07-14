@@ -32,58 +32,41 @@ namespace iige::input
 	{
 	enum class state_t { pressed, down, released, up };
 
-	struct button_action
+	using button_action  = std::function<void(iige::scene&, iige::window&, float)>;
+	using axis_1d_action = std::function<void(iige::scene&, iige::window&, float, float)>;
+	using axis_2d_action = std::function<void(iige::scene&, iige::window&, float, utils::math::vec2f)>;
+
+	namespace hardware
 		{
-		using callback_t = std::function<void(iige::scene&, iige::window&, float)>;
-		using container_t = utils::containers::handled_container<callback_t>;
+		enum class mouse_axis { x, y };
+		using mouse_button = sf::Mouse::Button;
+		using keyboard_key = sf::Keyboard::Key;
+		using joystick_axis_id = sf::Joystick::Axis;
 
-		callback_t pressed;
-		callback_t down;
-		callback_t released;
-		};
-	struct axis_1d_action
-		{
-		using callback_t = std::function<void(iige::scene&, iige::window&, float, float)>;
-		using container_t = utils::containers::handled_container<callback_t>;
+		using device_id = size_t;
 
-		container_t changed;
-		container_t nonzero;
-		};
-	struct axis_2d_action
-		{
-		using callback_t = std::function<void(iige::scene&, iige::window&, float, utils::math::vec2f)>;
-		using container_t = utils::containers::handled_container<callback_t>;
-
-		container_t changed;
-		container_t nonzero;
-		};
-
-	enum class mouse_axis { x, y };
-	using mouse_button    = sf::Mouse::Button;
-	using keyboard_key    = sf::Keyboard::Key;
-	struct joystick_button { bool operator==(joystick_button const&) const = default; uint8_t joystick_id; uint8_t button_id;          };
-	struct joystick_axis   { bool operator==(joystick_axis   const&) const = default; uint8_t joystick_id; sf::Joystick::Axis axis_id; };
+		struct joystick_button { bool operator==(joystick_button const&) const = default; uint8_t joystick_id; uint8_t        button_id; };
+		struct joystick_axis   { bool operator==(joystick_axis   const&) const = default; uint8_t joystick_id; joystick_axis_id axis_id; };
+		}
 	}
 
 namespace std
 	{
 	//TODO make sure this is correct?
 	template <>
-	struct hash<iige::input::joystick_button>
+	struct hash<iige::input::hardware::joystick_button>
 		{//https://stackoverflow.com/questions/57319676/proper-modern-way-of-converting-two-uint8-t-into-int16-t
-		size_t operator()(const iige::input::joystick_button& btn) const noexcept { return static_cast<unsigned>(btn.button_id) << 8 | static_cast<unsigned>(btn.joystick_id); }
+		size_t operator()(const iige::input::hardware::joystick_button& btn) const noexcept { return static_cast<unsigned>(btn.button_id) << 8 | static_cast<unsigned>(btn.joystick_id); }
 		};
 	template <>
-	struct hash<iige::input::joystick_axis>
+	struct hash<iige::input::hardware::joystick_axis>
 		{//https://stackoverflow.com/questions/57319676/proper-modern-way-of-converting-two-uint8-t-into-int16-t
-		size_t operator()(const iige::input::joystick_axis& axs) const noexcept { return static_cast<unsigned>(axs.axis_id) << 8 | static_cast<unsigned>(axs.joystick_id); }
+		size_t operator()(const iige::input::hardware::joystick_axis& axs) const noexcept { return static_cast<unsigned>(axs.axis_id) << 8 | static_cast<unsigned>(axs.joystick_id); }
 		};
 	}
 
 namespace iige::input
 	{
-
-
 	enum class input_t
 		{
 		
@@ -99,6 +82,11 @@ namespace iige::input
 			actions_container_t::handle_t emplace_action(Args&& ...args)
 				{
 				return actions_container.emplace(std::forward<Args>(args)...);
+				}
+			void remove_action(actions_container_t::handle_t& handle)
+				{
+				remove_action_associations(handle);
+				actions_container.remove(handle);
 				}
 			void remove_action_associations(actions_container_t::handle_t& handle)
 				{
@@ -192,49 +180,57 @@ namespace iige::input
 					}
 				}
 		};
-
-	struct button_actions_manager : public actions_manager<button_action, keyboard_key, mouse_button, joystick_button>
+		
+	template <state_t state>
+	struct button_actions_manager : public actions_manager<button_action, hardware::keyboard_key, hardware::mouse_button, hardware::joystick_button>
 		{
 		public:
-			template <state_t state, typename input_t>
+			template <typename input_t>
+			void evaluate_event_inner(input_t input, iige::scene& scene, iige::window& window, float delta_time)
+				{
+				auto it{get_input_to_action_handles<input_t>().find(input)};
+				if (it == get_input_to_action_handles<input_t>().end()) { return; }
+				auto action_handles{it->second};
+
+				for (auto handle : action_handles)
+					{
+					auto& action{actions_container[handle]};
+					action(scene, window, delta_time);
+					}
+				}
+		private:
+		};
+	/*struct axis_actions_manager : public actions_manager<axis_1d_action, hardware::keyboard_key, hardware::mouse_button, hardware::joystick_button>
+		{
+		public:
+			template <typename input_t>
 			void evaluate_event_inner(input_t input, iige::scene& scene, iige::window& window, float delta_time)
 				{
 				auto it{get_input_to_action_handles<input_t>().find(input)};
 				if (it == get_input_to_action_handles<input_t>().end()) { return; }
 				auto vec{it->second};
 
-				switch (state)
-					{
-					case iige::input::state_t::pressed : inner(scene, window, delta_time, vec, [](auto& a) { return a.pressed ; }); break;
-					case iige::input::state_t::down    : inner(scene, window, delta_time, vec, [](auto& a) { return a.down    ; }); break;
-					case iige::input::state_t::released: inner(scene, window, delta_time, vec, [](auto& a) { return a.released; }); break;
-					case iige::input::state_t::up      : break; //no callback
-					default: break;
-					}
-				}
-		private:
-
-			template <typename action_handles_t, typename action_state_getter_f>
-			void inner(iige::scene& scene, iige::window& window, float delta_time, action_handles_t action_handles, action_state_getter_f f)
-				{
 				for (auto handle : action_handles)
 					{
 					auto& action{actions_container[handle]};
-					f(action)(scene, window, delta_time);
+					action(scene, window, delta_time);
 					}
 				}
-		};
+		private:
+		};*/
 
 	class manager
 		{
 		public:
 			manager()
 				{
-				value_keyboard_keys.resize(keyboard_key::KeyCount);
-				value_mouse_buttons.resize(mouse_button::ButtonCount);
+				value_keyboard_keys.resize(hardware::keyboard_key::KeyCount);
+				value_mouse_buttons.resize(hardware::mouse_button::ButtonCount);
 				}
 
-			button_actions_manager button_actions;
+			button_actions_manager<state_t::pressed > button_actions_pressed ;
+			button_actions_manager<state_t::down    > button_actions_down    ;
+			button_actions_manager<state_t::released> button_actions_released;
 
 			void events_begin()
 				{
@@ -246,26 +242,26 @@ namespace iige::input
 					{
 					case sf::Event::KeyPressed:
 						if (event.key.code == -1) { return; }
-						button_actions.evaluate_event_inner<state_t::pressed> (event.key.code, scene, window, delta_time);
+						button_actions_pressed.evaluate_event_inner(event.key.code, scene, window, delta_time);
 						value_keyboard_keys[event.key.code] = 1.f;
 						down_keyboard_keys.emplace(event.key.code);
 						break;
 					case sf::Event::KeyReleased:
 						if (event.key.code == -1) { return; }
-						button_actions.evaluate_event_inner<state_t::released>(event.key.code, scene, window, delta_time);
+						button_actions_released.evaluate_event_inner(event.key.code, scene, window, delta_time);
 						value_keyboard_keys[event.key.code] = 0.f;
 						down_keyboard_keys.remove(event.key.code);
 						break;
 						
 					case sf::Event::MouseButtonPressed:
 						if (event.key.code == -1) { return; }
-						button_actions.evaluate_event_inner<state_t::pressed>(event.mouseButton.button, scene, window, delta_time);
+						button_actions_pressed.evaluate_event_inner(event.mouseButton.button, scene, window, delta_time);
 						value_mouse_buttons[event.mouseButton.button] = 1.f;
 						down_mouse_buttons.emplace(event.mouseButton.button);
 						break;
 					case sf::Event::MouseButtonReleased:
 						if (event.key.code == -1) { return; }
-						button_actions.evaluate_event_inner<state_t::released>(event.mouseButton.button, scene, window, delta_time);
+						button_actions_released.evaluate_event_inner(event.mouseButton.button, scene, window, delta_time);
 						value_mouse_buttons[event.mouseButton.button] = 0.f;
 						down_mouse_buttons.remove(event.mouseButton.button);
 						break;
@@ -273,8 +269,8 @@ namespace iige::input
 					case sf::Event::JoystickButtonPressed:
 						if (true)
 							{
-							joystick_button btn{static_cast<uint8_t>(event.joystickButton.joystickId), static_cast<uint8_t>(event.joystickButton.button)};
-							button_actions.evaluate_event_inner<state_t::pressed>(btn, scene, window, delta_time);
+							hardware::joystick_button btn{static_cast<uint8_t>(event.joystickButton.joystickId), static_cast<uint8_t>(event.joystickButton.button)};
+							button_actions_pressed.evaluate_event_inner(btn, scene, window, delta_time);
 							value_joystick_buttons[event.joystickButton.joystickId][event.joystickButton.button] = 1.f;
 							down_joystick_buttons.emplace(btn);
 							}
@@ -282,8 +278,8 @@ namespace iige::input
 					case sf::Event::JoystickButtonReleased:
 						if (true)
 							{
-							joystick_button btn{static_cast<uint8_t>(event.joystickButton.joystickId), static_cast<uint8_t>(event.joystickButton.button)};
-							button_actions.evaluate_event_inner<state_t::released>(btn, scene, window, delta_time);
+							hardware::joystick_button btn{static_cast<uint8_t>(event.joystickButton.joystickId), static_cast<uint8_t>(event.joystickButton.button)};
+							button_actions_released.evaluate_event_inner(btn, scene, window, delta_time);
 							value_joystick_buttons[event.joystickButton.joystickId][event.joystickButton.button] = 0.f;
 							down_joystick_buttons.remove(btn);
 							}
@@ -295,15 +291,15 @@ namespace iige::input
 				{
 				for (auto key : down_keyboard_keys)
 					{
-					button_actions.evaluate_event_inner<state_t::down>(key, scene, window, delta_time);
+					button_actions_down.evaluate_event_inner(key, scene, window, delta_time);
 					}
 				for (auto button : down_mouse_buttons)
 					{
-					button_actions.evaluate_event_inner<state_t::down>(button, scene, window, delta_time);
+					button_actions_down.evaluate_event_inner(button, scene, window, delta_time);
 					}
 				for (auto button : down_joystick_buttons)
 					{
-					button_actions.evaluate_event_inner<state_t::down>(button, scene, window, delta_time);
+					button_actions_down.evaluate_event_inner(button, scene, window, delta_time);
 					}
 				}
 
@@ -315,9 +311,9 @@ namespace iige::input
 			std::array<std::array<float, 32>, 8> value_joystick_buttons{};
 			std::array<std::array<float,  6>, 8> value_joystick_axes   {};
 
-			utils::containers::tiny_set<keyboard_key   > down_keyboard_keys;
-			utils::containers::tiny_set<mouse_button   > down_mouse_buttons;
-			utils::containers::tiny_set<joystick_button> down_joystick_buttons;
-			utils::containers::tiny_set<joystick_axis  > down_joystick_axes;
+			utils::containers::tiny_set<hardware::keyboard_key   > down_keyboard_keys;
+			utils::containers::tiny_set<hardware::mouse_button   > down_mouse_buttons;
+			utils::containers::tiny_set<hardware::joystick_button> down_joystick_buttons;
+			utils::containers::tiny_set<hardware::joystick_axis  > down_joystick_axes;
 		};
 	}

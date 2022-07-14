@@ -362,111 +362,112 @@ int main()
 
 	if (true)
 		{
-		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+		auto forward_pressed{input.button_actions_pressed.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
 			view.each([](iige::vec2f& directional) { directional.y = -10; });
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.y = 0; });
-			}})};
-		input.button_actions.associate_action(print_action, iige::input::keyboard_key::W);
-		}
-	if (true)
-		{
-		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.y = 10; });
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			},
+			})};
+		auto forward_released{input.button_actions_released.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
 			view.each([](iige::vec2f& directional) { directional.y = 0; });
-			}})};
-		input.button_actions.associate_action(print_action, iige::input::keyboard_key::S);
+			})};
+
+		input.button_actions_pressed .associate_action(forward_pressed , iige::input::hardware::keyboard_key::W);
+		input.button_actions_released.associate_action(forward_released, iige::input::hardware::keyboard_key::W);
 		}
 	if (true)
 		{
-		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+		auto back_pressed{input.button_actions_pressed.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.x = -10; });
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			},
+			view.each([](iige::vec2f& directional) { directional.y = +10; });
+			})};
+		auto back_released{input.button_actions_released.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.x = 0; });
-			}})};
-		input.button_actions.associate_action(print_action, iige::input::keyboard_key::Q);
+			view.each([](iige::vec2f& directional) { directional.y = 0; });
+			})};
+
+		input.button_actions_pressed.associate_action(back_pressed, iige::input::hardware::keyboard_key::S);
+		input.button_actions_released.associate_action(back_released, iige::input::hardware::keyboard_key::S);
 		}
+	//if (true)
+	//	{
+	//	auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	//		view.each([](iige::vec2f& directional) { directional.x = -10; });
+	//		},
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		},
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	//		view.each([](iige::vec2f& directional) { directional.x = 0; });
+	//		}})};
+	//	input.button_actions.associate_action(print_action, iige::input::keyboard_key::Q);
+	//	}
+	//if (true)
+	//	{
+	//	auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	//		view.each([](iige::vec2f& directional) { directional.x = 10; });
+	//		},
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		},
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	//		view.each([](iige::vec2f& directional) { directional.x = 0; });
+	//		}})};
+	//	input.button_actions.associate_action(print_action, iige::input::keyboard_key::E);
+	//	}
 	if (true)
 		{
-		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.x = 10; });
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.x = 0; });
-			}})};
-		input.button_actions.associate_action(print_action, iige::input::keyboard_key::E);
-		}
-	if (true)
-		{
-		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+
+
+		auto right_pressed{input.button_actions_pressed.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
 			view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{-90}); });
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			},
+			})};
+		auto right_released{input.button_actions_released.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
 			view.each([](iige::angle::rad& dir) { dir.value = 0; });
-			}})};
-		input.button_actions.associate_action(print_action, iige::input::keyboard_key::A);
+			})};
+
+		input.button_actions_pressed.associate_action(right_pressed, iige::input::hardware::keyboard_key::D);
+		input.button_actions_released.associate_action(right_released, iige::input::hardware::keyboard_key::D);
 		}
 	if (true)
 		{
-		auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+		auto left_pressed{input.button_actions_pressed.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
-			view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{90}); });
-			},
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			},
+			view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{+90}); });
+			})};
+		auto left_released{input.button_actions_released.emplace_action(
 			[](iige::scene& scene, iige::window& window, float delta_time)
 			{
 			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
 			view.each([](iige::angle::rad& dir) { dir.value = 0; });
-			}})};
-		input.button_actions.associate_action(print_action, iige::input::keyboard_key::D);
+			})};
+		input.button_actions_pressed.associate_action(left_pressed, iige::input::hardware::keyboard_key::A);
+		input.button_actions_released.associate_action(left_released, iige::input::hardware::keyboard_key::A);
 		}
 
 	main_input(window, scene);

@@ -38,9 +38,7 @@ namespace iige
 						step.emplace([&system_class_instance](iige::scene& scene, iige::window& window, float delta_time)
 							{ system_class_instance.step(scene, window, delta_time); }),
 						draw.emplace([&system_class_instance](iige::scene& scene, iige::window& window, float delta_time, float interpolation)
-							{
-							system_class_instance.draw(scene, window, delta_time, interpolation);
-							}),
+							{ system_class_instance.draw(scene, window, delta_time, interpolation); }),
 						};
 					}
 				else if constexpr (std::derived_from<T, iige::ecs::systems::system_step>) 
@@ -66,13 +64,13 @@ namespace iige
 
 		private:
 
-			handle_step emplace_step(std::derived_from<iige::ecs::systems::system_step> auto& system_class_instance)
+			/*handle_step emplace_step(std::derived_from<iige::ecs::systems::system_step> auto& system_class_instance)
 				{
 				return emplace_step([&](iige::scene& scene, iige::window& window, float delta_time) { system_class_instance.step(scene, window, delta_time); });
 				}
 			handle_draw emplace_draw(std::derived_from<iige::ecs::systems::system_draw> auto& system_class_instance)
 				{
 				return emplace_draw([&](iige::scene& scene, iige::window& window, float delta_time, float interpolation) { system_class_instance.draw(scene, window, delta_time, interpolation); });
-				}
+				}*/
 		};
 	}
