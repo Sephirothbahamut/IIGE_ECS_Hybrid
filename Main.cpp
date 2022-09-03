@@ -334,7 +334,7 @@ int main()
 
 		view.each([&](const iige::ecs::components::collision_data& cdata, iige::vec2f& speed_translation, iige::vec2f& next_translation)
 			{
-			using namespace utils::math::operators;
+			using namespace utils::operators;
 		
 			speed_translation = speed_translation - cdata.data.normal * 2.f * (speed_translation <dot> cdata.data.normal);
 		
