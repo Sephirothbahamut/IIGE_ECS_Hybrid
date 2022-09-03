@@ -319,7 +319,7 @@ int main()
 	iige::input::manager input;
 
 	iige::loop::variable_fps_and_game_speed loop{scene, window, systems_manager, collision, input};/*/
-	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, systems_manager, collision, 10};/**/
+	iige::loop::fixed_game_speed_variable_framerate loop{scene, window, systems_manager, collision, input, 1};/**/
 
 	iige::ecs::systems::draw::colliders colliders_drawing;
 
@@ -471,6 +471,7 @@ int main()
 		}
 
 	main_input(window, scene);
+	main_shapes(window, scene);
 	loop.run();
 	
 	return 0;

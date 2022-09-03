@@ -120,25 +120,19 @@ namespace iige::ecs::systems
 			auto clamp{scene.ecs_registry.view<typename T::translation, typename T::translation_magnitude::min, typename T::translation_magnitude::max>()};
 			clamp.each([](T::translation::value_type& xy, const T::translation_magnitude::min::value_type& min, const T::translation_magnitude::max::value_type& max)
 				{
-				float magnitude = xy.magnitude();
-				magnitude = utils::clamp(magnitude, min, max);
-				xy = magnitude;
+				xy.length = utils::clamp(xy.length, min, max);
 				});
 			
 			auto min{scene.ecs_registry.view<typename T::translation, typename T::translation_magnitude::min>(entt::exclude<typename T::translation_magnitude::max>)};
 			min.each([](T::translation::value_type& xy, const T::translation_magnitude::min::value_type& min)
 				{
-				float magnitude = xy.magnitude();
-				magnitude = std::max(magnitude, min);
-				xy = magnitude;
+				xy.length = std::max(xy.length, min);
 				});
 			
 			auto max{scene.ecs_registry.view<typename T::translation, typename T::translation_magnitude::max>(entt::exclude<typename T::translation_magnitude::min>)};
 			max.each([](T::translation::value_type& xy, const T::translation_magnitude::max::value_type& max)
 				{
-				float magnitude = xy.magnitude();
-				magnitude = std::min(magnitude, max);
-				xy = magnitude;
+				xy.length = std::min(xy.length, max);
 				});
 			}
 
