@@ -4,12 +4,15 @@
 #include <cassert>
 
 #include <utils/memory.h>
+#include <utils/discard.h>
 #include <utils/compilation/debug.h>
 #include <utils/math/geometry/interactions.h>
 #include <utils/math/geometry/transformations.h>
 #include <utils/math/geometry/continuous_interactions.h>
 
 // Left in memory of the pyramids
+// #include <utils/memory.h>
+// #include <utils/discard.h>
 // #include <utils/concepts.h>
 // #include <utils/math/vec2.h>
 // #include <utils/math/vec2.h >

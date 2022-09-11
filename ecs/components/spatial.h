@@ -2,7 +2,6 @@
 
 #include <utils/math/geometry/transformations.h>
 #include <utils/math/math.h>
-#include <utils/definitions.h>
 #include <utils/string.h>
 
 #include "../../types/core.h"
@@ -168,28 +167,28 @@ namespace iige::ecs::components::transform
 
 	// Transform types
 	template <typename T>
-	concept is_absolute = ::utils::concepts::undecorated_any_of<T, absolute::translation, absolute::next::translation, absolute::rotation, absolute::next::rotation, absolute::scaling, absolute::next::scaling>;
+	concept is_absolute     = ::utils::concepts::any_of_undecorated<T, absolute::translation    , absolute::next::translation, absolute::rotation, absolute::next::rotation, absolute::scaling, absolute::next::scaling>;
 	template <typename T>
-	concept is_relative = ::utils::concepts::undecorated_any_of<T, relative::translation, relative::next::translation, relative::rotation, relative::next::rotation, relative::scaling, relative::next::scaling>;
+	concept is_relative     = ::utils::concepts::any_of_undecorated<T, relative::translation    , relative::next::translation, relative::rotation, relative::next::rotation, relative::scaling, relative::next::scaling>;
 	template <typename T>
-	concept is_speed        = ::utils::concepts::undecorated_any_of<T, speed::translation, speed::directional, speed::rotation, speed::scaling>;
+	concept is_speed        = ::utils::concepts::any_of_undecorated<T, speed::translation       , speed::directional, speed::rotation, speed::scaling>;
 	template <typename T>
-	concept is_acceleration = ::utils::concepts::undecorated_any_of < T, acceleration::translation, acceleration::directional, acceleration::rotation, acceleration::scaling > ;
+	concept is_acceleration = ::utils::concepts::any_of_undecorated<T, acceleration::translation, acceleration::directional, acceleration::rotation, acceleration::scaling>;
 	template <typename T>
-	concept is_interpolated = ::utils::concepts::undecorated_any_of<T, interpolated::translation, interpolated::rotation, interpolated::scaling>;
+	concept is_interpolated = ::utils::concepts::any_of_undecorated<T, interpolated::translation, interpolated::rotation, interpolated::scaling>;
 
 	// Transform component types
 	template <typename T>
-	concept is_translation = ::utils::concepts::undecorated_any_of<T, absolute::translation, absolute::next::translation, relative::translation, relative::next::translation, speed::translation, acceleration::translation, interpolated::translation>;
+	concept is_translation = ::utils::concepts::any_of_undecorated<T, absolute::translation, absolute::next::translation, relative::translation, relative::next::translation, speed::translation, acceleration::translation, interpolated::translation>;
 	template <typename T>
-	concept is_directional = ::utils::concepts::undecorated_any_of<T, speed::directional, acceleration::directional>;
+	concept is_directional = ::utils::concepts::any_of_undecorated<T, speed::directional   , acceleration::directional>;
 	template <typename T>
-	concept is_rotation = ::utils::concepts::undecorated_any_of<T, absolute::rotation, absolute::next::rotation, relative::rotation, relative::next::rotation, speed::rotation, acceleration::rotation, interpolated::rotation>;
+	concept is_rotation    = ::utils::concepts::any_of_undecorated<T, absolute::rotation   , absolute::next::rotation, relative::rotation, relative::next::rotation, speed::rotation, acceleration::rotation, interpolated::rotation>;
 	template <typename T>
-	concept is_scaling = ::utils::concepts::undecorated_any_of<T, absolute::scaling, absolute::next::scaling, relative::scaling, relative::next::scaling, speed::scaling, acceleration::scaling, interpolated::scaling>;
+	concept is_scaling     = ::utils::concepts::any_of_undecorated<T, absolute::scaling    , absolute::next::scaling, relative::scaling, relative::next::scaling, speed::scaling, acceleration::scaling, interpolated::scaling>;
 
 	template <typename T>
-	concept is_next = ::utils::concepts::undecorated_any_of
+	concept is_next = ::utils::concepts::any_of_undecorated
 		<T, 
 		absolute::next::translation, absolute::next::rotation, absolute::next::scaling, 
 		relative::next::translation, relative::next::rotation, relative::next::scaling

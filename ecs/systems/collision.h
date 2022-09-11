@@ -6,7 +6,6 @@
 
 #include <utils/math/geometry/interactions.h>
 #include <utils/math/geometry/continuous_interactions.h>
-#include <utils/definitions.h>
 #include <utils/variant.h>
 #include <utils/math/angle.h>
 

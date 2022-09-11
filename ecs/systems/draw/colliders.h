@@ -6,9 +6,10 @@
 
 #include <utils/math/geometry/interactions.h>
 #include <utils/math/geometry/continuous_interactions.h>
-#include <utils/definitions.h>
 #include <utils/variant.h>
 #include <utils/math/angle.h>
+
+#include "../../../to_sf.h"
 
 #include "../../entt.h"
 
@@ -41,7 +42,7 @@ namespace iige::ecs::systems::draw
 
 			void update_colliders_vertex_array(const shapes::segment& shape, sf::Color c)
 				{
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.a), c}); va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.b), c});
+				va.append(sf::Vertex{{shape.a.x, shape.a.y}, c}); va.append(sf::Vertex{{shape.b.x, shape.b.y}, c});
 				}
 			void update_colliders_vertex_array(const shapes::circle& shape, sf::Color c)
 				{
@@ -53,31 +54,31 @@ namespace iige::ecs::systems::draw
 				using namespace utils::math::angle::literals;
 				for (utils::math::angle::deg α = delta_α; α.value < utils::math::angle::deg::full_angle; α += delta_α)
 					{
-					va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(vec + shape.center), c});
+					va.append(sf::Vertex{iige::to_sf<float>(vec + shape.center), c});
 					vec = right + α;
-					va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(vec + shape.center), c});
+					va.append(sf::Vertex{iige::to_sf<float>(vec + shape.center), c});
 					}
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(vec + shape.center), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(right + shape.center), c});
+				va.append(sf::Vertex{iige::to_sf<float>(vec + shape.center), c});
+				va.append(sf::Vertex{iige::to_sf<float>(right + shape.center), c});
 				}
 			void update_colliders_vertex_array(const shapes::polygon& shape, sf::Color c)
 				{
 				for (const auto& edge : shape.get_edges())
 					{
-					va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(edge.a), c});
-					va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(edge.b), c});
+					va.append(sf::Vertex{iige::to_sf<float>(edge.a), c});
+					va.append(sf::Vertex{iige::to_sf<float>(edge.b), c});
 					}
 				}
 			void update_colliders_vertex_array(const shapes::aabb& shape, sf::Color c)
 				{
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.ul), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.ur), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.ur), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.dr), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.dr), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.dl), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.dl), c});
-				va.append(sf::Vertex{utils::vec_cast<sf::Vector2, float>(shape.ul), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.ul), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.ur), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.ur), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.dr), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.dr), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.dl), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.dl), c});
+				va.append(sf::Vertex{iige::to_sf<float>(shape.ul), c});
 				}
 			void update_colliders_vertex_array(const shapes::point& shape, sf::Color c)
 				{

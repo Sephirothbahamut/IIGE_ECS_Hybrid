@@ -1,11 +1,10 @@
 
 
-#include <utils/cout_containers.h>
+#include <utils/output/std_containers.h>
 #include <utils/math/vec2.h>
 #include <utils/enum.h>
 
 #include <random>
-#include <utils/definitions.h>
 #include <utils/math/angle.h>
 
 #include "window.h"
@@ -326,7 +325,6 @@ int main()
 	//systems_manager.draw.emplace(&iige::ecs::systems::bad_draw);
 	systems_manager.emplace(colliders_drawing);
 
-
 	//Entities bouncing system
 	systems_manager.step.emplace([&](iige::scene& scene, iige::window& window, float delta_time)
 		{
@@ -334,9 +332,7 @@ int main()
 
 		view.each([&](const iige::ecs::components::collision_data& cdata, iige::vec2f& speed_translation, iige::vec2f& next_translation)
 			{
-			using namespace utils::operators;
-		
-			speed_translation = speed_translation - cdata.data.normal * 2.f * (speed_translation <dot> cdata.data.normal);
+			speed_translation = speed_translation - cdata.data.normal * 2.f * (speed_translation <utils::math::operators::dot> cdata.data.normal);
 		
 			next_translation = cdata.data.impact_point + speed_translation * (1 - cdata.data.t) * delta_time;
 			});

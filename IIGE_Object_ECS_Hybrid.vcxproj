@@ -184,6 +184,7 @@
     <ClInclude Include="Loop.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Systems_manager.h" />
+    <ClInclude Include="to_sf.h" />
     <ClInclude Include="types\core.h" />
     <ClInclude Include="types\shapes.h" />
     <ClInclude Include="Window.h" />

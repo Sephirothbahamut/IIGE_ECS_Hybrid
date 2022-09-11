@@ -88,7 +88,7 @@ namespace iige::ecs::systems
 			auto clamp{scene.ecs_registry.view<T, typename constraint_t::min, typename constraint_t::max>()};
 			clamp.each([](T::value_type& value, const constraint_t::min::value_type& min, const constraint_t::max::value_type& max)
 				{
-				value = utils::clamp(value, min, max);
+				value = utils::math::clamp(value, min, max);
 				});
 
 			if constexpr (std::is_same_v<typename T::value_type, float>) // No min or max alone with angles doesn't make sense.
@@ -120,7 +120,7 @@ namespace iige::ecs::systems
 			auto clamp{scene.ecs_registry.view<typename T::translation, typename T::translation_magnitude::min, typename T::translation_magnitude::max>()};
 			clamp.each([](T::translation::value_type& xy, const T::translation_magnitude::min::value_type& min, const T::translation_magnitude::max::value_type& max)
 				{
-				xy.length = utils::clamp(xy.length, min, max);
+				xy.length = utils::math::clamp(xy.length, min, max);
 				});
 			
 			auto min{scene.ecs_registry.view<typename T::translation, typename T::translation_magnitude::min>(entt::exclude<typename T::translation_magnitude::max>)};
@@ -220,7 +220,7 @@ namespace iige::ecs::systems
 			auto view{scene.ecs_registry.view<from_t, to_t, out_t>()};
 			view.each([interpolation](const from_t::value_type& from, const to_t::value_type& to, out_t::value_type& out)
 				{
-				out = utils::lerp(from, to, interpolation);
+				out = utils::math::lerp(from, to, interpolation);
 				});
 			}
 

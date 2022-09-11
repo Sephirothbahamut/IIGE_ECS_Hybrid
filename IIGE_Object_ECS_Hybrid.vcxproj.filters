@@ -107,5 +107,8 @@
     <ClInclude Include="input_enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="to_sf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
