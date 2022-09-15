@@ -51,7 +51,7 @@ namespace iige
 						{
 						iige::scene & scene  {*this->scene };
 						iige::window& window{*this->window};
-
+						
 						window.sf_window.clear();
 						ecs::systems::interpolate(scene, interpolation);
 						

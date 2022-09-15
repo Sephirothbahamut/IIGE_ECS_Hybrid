@@ -323,26 +323,28 @@ int main()
 	iige::ecs::systems::draw::colliders colliders_drawing;
 
 	//systems_manager.draw.emplace(&iige::ecs::systems::bad_draw);
-	systems_manager.emplace(colliders_drawing);
+	//systems_manager.emplace(colliders_drawing);
 
 	//Entities bouncing system
-	systems_manager.step.emplace([&](iige::scene& scene, iige::window& window, float delta_time)
-		{
-		auto view{scene.view<iige::ecs::components::collision_data, iige::ecs::components::transform::speed::translation, iige::ecs::components::transform::absolute::next::translation>()};
+	//systems_manager.step.emplace([&](iige::scene& scene, iige::window& window, float delta_time)
+	//	{
+	//	auto view{scene.view<iige::ecs::components::collision_data, iige::ecs::components::transform::speed::translation, iige::ecs::components::transform::absolute::next::translation>()};
+	//
+	//	view.each([&](const iige::ecs::components::collision_data& cdata, iige::vec2f& speed_translation, iige::vec2f& next_translation)
+	//		{
+	//		speed_translation = speed_translation - cdata.data.normal * 2.f * (speed_translation <utils::math::operators::dot> cdata.data.normal);
+	//	
+	//		next_translation = cdata.data.impact_point + speed_translation * (1 - cdata.data.t) * delta_time;
+	//		});
+	//	});
 
-		view.each([&](const iige::ecs::components::collision_data& cdata, iige::vec2f& speed_translation, iige::vec2f& next_translation)
-			{
-			speed_translation = speed_translation - cdata.data.normal * 2.f * (speed_translation <utils::math::operators::dot> cdata.data.normal);
-		
-			next_translation = cdata.data.impact_point + speed_translation * (1 - cdata.data.t) * delta_time;
-			});
-		});
+	sf::RectangleShape rect_shape{{10, 10}};
 
 	//iige::window wall bouncing system
 	systems_manager.draw.emplace([&](iige::scene& scene, iige::window& window, float, float)
 		{
 		auto view{scene.view<iige::ecs::components::transform::absolute::translation, iige::ecs::components::transform::speed::translation>()};
-
+	
 		view.each([&](const iige::vec2f& absolute_translation, iige::vec2f& speed_translation)
 			{
 			auto&       x{absolute_translation.x};
@@ -466,8 +468,8 @@ int main()
 		input.button_actions_released.associate_action(left_released, iige::input::hardware::keyboard_key::A);
 		}
 
-	main_input(window, scene);
-	main_shapes(window, scene);
+	//main_input(window, scene);
+	//main_shapes(window, scene);
 	loop.run();
 	
 	return 0;
