@@ -12,7 +12,7 @@
 #include <utils/variant.h>
 #include <utils/math/vec2.h>
 #include <utils/containers/flat_set.h>
-#include <utils/containers/handled_container.h>
+#include <utils/containers/hive/next.h>
 
 #include "Window.h"
 
@@ -77,7 +77,7 @@ namespace iige::input
 	class actions_manager
 		{
 		public:
-			using actions_container_t = utils::containers::handled_container<action_t>;
+			using actions_container_t = utils::containers::hive::next<action_t>;
 			template <typename ...Args>
 			actions_container_t::handle_t emplace_action(Args&& ...args)
 				{
