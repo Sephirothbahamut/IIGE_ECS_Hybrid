@@ -12,6 +12,7 @@
 #include "Loop.h"
 #include "input.h"
 
+#include "ecs/entt.h"
 #include "ecs/components/bad_draw.h"
 #include "ecs/components/spatial.h"
 #include "ecs/systems/collision.h"
@@ -323,7 +324,7 @@ int main()
 	iige::ecs::systems::draw::colliders colliders_drawing;
 
 	//systems_manager.draw.emplace(&iige::ecs::systems::bad_draw);
-	//systems_manager.emplace(colliders_drawing);
+	systems_manager.emplace(colliders_drawing);
 
 	//Entities bouncing system
 	//systems_manager.step.emplace([&](iige::scene& scene, iige::window& window, float delta_time)
@@ -341,135 +342,135 @@ int main()
 	sf::RectangleShape rect_shape{{10, 10}};
 
 	//iige::window wall bouncing system
-	systems_manager.draw.emplace([&](iige::scene& scene, iige::window& window, float, float)
-		{
-		auto view{scene.view<iige::ecs::components::transform::absolute::translation, iige::ecs::components::transform::speed::translation>()};
-	
-		view.each([&](const iige::vec2f& absolute_translation, iige::vec2f& speed_translation)
-			{
-			auto&       x{absolute_translation.x};
-			auto&       y{absolute_translation.y};
-			auto& speed_x{speed_translation   .x};
-			auto& speed_y{speed_translation   .y};
-			if (x < 0 && speed_x < 0) { speed_x *= -1; }
-			if (x > window.sf_window.getSize().x && speed_x > 0) { speed_x *= -1; }
-			if (y < 0 && speed_y < 0) { speed_y *= -1; }
-			if (y > window.sf_window.getSize().y && speed_y > 0) { speed_y *= -1; }
-			});
-		});
-
-	if (true)
-		{
-		auto forward_pressed{input.button_actions_pressed.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.y = -10; });
-			})};
-		auto forward_released{input.button_actions_released.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.y = 0; });
-			})};
-
-		input.button_actions_pressed .associate_action(forward_pressed , iige::input::hardware::keyboard_key::W);
-		input.button_actions_released.associate_action(forward_released, iige::input::hardware::keyboard_key::W);
-		}
-	if (true)
-		{
-		auto back_pressed{input.button_actions_pressed.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.y = +10; });
-			})};
-		auto back_released{input.button_actions_released.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-			view.each([](iige::vec2f& directional) { directional.y = 0; });
-			})};
-
-		input.button_actions_pressed.associate_action(back_pressed, iige::input::hardware::keyboard_key::S);
-		input.button_actions_released.associate_action(back_released, iige::input::hardware::keyboard_key::S);
-		}
+	//systems_manager.draw.emplace([&](iige::scene& scene, iige::window& window, float, float)
+	//	{
+	//	auto view{scene.view<iige::ecs::components::transform::absolute::translation, iige::ecs::components::transform::speed::translation>()};
+	//
+	//	view.each([&](const iige::vec2f& absolute_translation, iige::vec2f& speed_translation)
+	//		{
+	//		auto&       x{absolute_translation.x};
+	//		auto&       y{absolute_translation.y};
+	//		auto& speed_x{speed_translation   .x};
+	//		auto& speed_y{speed_translation   .y};
+	//		if (x < 0 && speed_x < 0) { speed_x *= -1; }
+	//		if (x > window.sf_window.getSize().x && speed_x > 0) { speed_x *= -1; }
+	//		if (y < 0 && speed_y < 0) { speed_y *= -1; }
+	//		if (y > window.sf_window.getSize().y && speed_y > 0) { speed_y *= -1; }
+	//		});
+	//	});
+	//
 	//if (true)
 	//	{
-	//	auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+	//	auto forward_pressed{input.button_actions_pressed.emplace_action(
 	//		[](iige::scene& scene, iige::window& window, float delta_time)
 	//		{
 	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-	//		view.each([](iige::vec2f& directional) { directional.x = -10; });
-	//		},
-	//		[](iige::scene& scene, iige::window& window, float delta_time)
-	//		{
-	//		},
+	//		view.each([](iige::vec2f& directional) { directional.y = -10; });
+	//		})};
+	//	auto forward_released{input.button_actions_released.emplace_action(
 	//		[](iige::scene& scene, iige::window& window, float delta_time)
 	//		{
 	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-	//		view.each([](iige::vec2f& directional) { directional.x = 0; });
-	//		}})};
-	//	input.button_actions.associate_action(print_action, iige::input::keyboard_key::Q);
+	//		view.each([](iige::vec2f& directional) { directional.y = 0; });
+	//		})};
+	//
+	//	input.button_actions_pressed .associate_action(forward_pressed , iige::input::hardware::keyboard_key::W);
+	//	input.button_actions_released.associate_action(forward_released, iige::input::hardware::keyboard_key::W);
 	//	}
 	//if (true)
 	//	{
-	//	auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+	//	auto back_pressed{input.button_actions_pressed.emplace_action(
 	//		[](iige::scene& scene, iige::window& window, float delta_time)
 	//		{
 	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-	//		view.each([](iige::vec2f& directional) { directional.x = 10; });
-	//		},
-	//		[](iige::scene& scene, iige::window& window, float delta_time)
-	//		{
-	//		},
+	//		view.each([](iige::vec2f& directional) { directional.y = +10; });
+	//		})};
+	//	auto back_released{input.button_actions_released.emplace_action(
 	//		[](iige::scene& scene, iige::window& window, float delta_time)
 	//		{
 	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
-	//		view.each([](iige::vec2f& directional) { directional.x = 0; });
-	//		}})};
-	//	input.button_actions.associate_action(print_action, iige::input::keyboard_key::E);
+	//		view.each([](iige::vec2f& directional) { directional.y = 0; });
+	//		})};
+	//
+	//	input.button_actions_pressed.associate_action(back_pressed, iige::input::hardware::keyboard_key::S);
+	//	input.button_actions_released.associate_action(back_released, iige::input::hardware::keyboard_key::S);
 	//	}
-	if (true)
-		{
+	////if (true)
+	////	{
+	////	auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+	////		[](iige::scene& scene, iige::window& window, float delta_time)
+	////		{
+	////		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	////		view.each([](iige::vec2f& directional) { directional.x = -10; });
+	////		},
+	////		[](iige::scene& scene, iige::window& window, float delta_time)
+	////		{
+	////		},
+	////		[](iige::scene& scene, iige::window& window, float delta_time)
+	////		{
+	////		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	////		view.each([](iige::vec2f& directional) { directional.x = 0; });
+	////		}})};
+	////	input.button_actions.associate_action(print_action, iige::input::keyboard_key::Q);
+	////	}
+	////if (true)
+	////	{
+	////	auto print_action{input.button_actions.emplace_action(iige::input::button_action{
+	////		[](iige::scene& scene, iige::window& window, float delta_time)
+	////		{
+	////		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	////		view.each([](iige::vec2f& directional) { directional.x = 10; });
+	////		},
+	////		[](iige::scene& scene, iige::window& window, float delta_time)
+	////		{
+	////		},
+	////		[](iige::scene& scene, iige::window& window, float delta_time)
+	////		{
+	////		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::directional>()};
+	////		view.each([](iige::vec2f& directional) { directional.x = 0; });
+	////		}})};
+	////	input.button_actions.associate_action(print_action, iige::input::keyboard_key::E);
+	////	}
+	//if (true)
+	//	{
+	//
+	//
+	//	auto right_pressed{input.button_actions_pressed.emplace_action(
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+	//		view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{-90}); });
+	//		})};
+	//	auto right_released{input.button_actions_released.emplace_action(
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+	//		view.each([](iige::angle::rad& dir) { dir.value = 0; });
+	//		})};
+	//
+	//	input.button_actions_pressed.associate_action(right_pressed, iige::input::hardware::keyboard_key::D);
+	//	input.button_actions_released.associate_action(right_released, iige::input::hardware::keyboard_key::D);
+	//	}
+	//if (true)
+	//	{
+	//	auto left_pressed{input.button_actions_pressed.emplace_action(
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+	//		view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{+90}); });
+	//		})};
+	//	auto left_released{input.button_actions_released.emplace_action(
+	//		[](iige::scene& scene, iige::window& window, float delta_time)
+	//		{
+	//		auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
+	//		view.each([](iige::angle::rad& dir) { dir.value = 0; });
+	//		})};
+	//	input.button_actions_pressed.associate_action(left_pressed, iige::input::hardware::keyboard_key::A);
+	//	input.button_actions_released.associate_action(left_released, iige::input::hardware::keyboard_key::A);
+	//	}
 
-
-		auto right_pressed{input.button_actions_pressed.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
-			view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{-90}); });
-			})};
-		auto right_released{input.button_actions_released.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
-			view.each([](iige::angle::rad& dir) { dir.value = 0; });
-			})};
-
-		input.button_actions_pressed.associate_action(right_pressed, iige::input::hardware::keyboard_key::D);
-		input.button_actions_released.associate_action(right_released, iige::input::hardware::keyboard_key::D);
-		}
-	if (true)
-		{
-		auto left_pressed{input.button_actions_pressed.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
-			view.each([](iige::angle::rad& dir) { dir = static_cast<iige::angle::rad>(iige::angle::deg{+90}); });
-			})};
-		auto left_released{input.button_actions_released.emplace_action(
-			[](iige::scene& scene, iige::window& window, float delta_time)
-			{
-			auto view{scene.view<player<0>, iige::ecs::components::transform::speed::rotation>()};
-			view.each([](iige::angle::rad& dir) { dir.value = 0; });
-			})};
-		input.button_actions_pressed.associate_action(left_pressed, iige::input::hardware::keyboard_key::A);
-		input.button_actions_released.associate_action(left_released, iige::input::hardware::keyboard_key::A);
-		}
-
-	//main_input(window, scene);
-	//main_shapes(window, scene);
+	main_input(window, scene);
+	main_shapes(window, scene);
 	loop.run();
 	
 	return 0;

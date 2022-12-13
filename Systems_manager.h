@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <utils/containers/handled_container.h>
+#include <utils/containers/hive/skipfield.h>
 
 #include "ecs/systems/system.h"
 
@@ -20,8 +20,8 @@ namespace iige
 		friend class loop::details::base_loop;
 		using callable_step_t = std::function<void(iige::scene&, iige::window&, float)>;
 		using callable_draw_t = std::function<void(iige::scene&, iige::window&, float, float)>;
-		using container_step_t = utils::containers::handled_container<callable_step_t>;
-		using container_draw_t = utils::containers::handled_container<callable_draw_t>;
+		using container_step_t = utils::containers::hive::skipfield<callable_step_t>;
+		using container_draw_t = utils::containers::hive::skipfield<callable_draw_t>;
 
 		public:
 			using handle_step = container_step_t::handle_t;
@@ -57,7 +57,7 @@ namespace iige
 					}
 				}
 
-			void remove(std::pair<handle_step, handle_draw>& handles) { step.remove(handles.first); draw.remove(handles.second); }
+			void remove(std::pair<handle_step, handle_draw>& handles) { step.erase(handles.first); draw.erase(handles.second); }
 
 			container_step_t step;
 			container_draw_t draw;

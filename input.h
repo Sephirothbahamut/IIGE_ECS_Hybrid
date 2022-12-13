@@ -12,7 +12,7 @@
 #include <utils/variant.h>
 #include <utils/math/vec2.h>
 #include <utils/containers/flat_set.h>
-#include <utils/containers/handled_container.h>
+#include <utils/containers/hive/next.h>
 
 #include "Window.h"
 
@@ -77,7 +77,7 @@ namespace iige::input
 	class actions_manager
 		{
 		public:
-			using actions_container_t = utils::containers::handled_container<action_t>;
+			using actions_container_t = utils::containers::hive::next<action_t>;
 			template <typename ...Args>
 			actions_container_t::handle_t emplace_action(Args&& ...args)
 				{
@@ -86,7 +86,7 @@ namespace iige::input
 			void remove_action(actions_container_t::handle_t& handle)
 				{
 				remove_action_associations(handle);
-				actions_container.remove(handle);
+				actions_container.erase(handle);
 				}
 			void remove_action_associations(actions_container_t::handle_t& handle)
 				{
@@ -194,7 +194,7 @@ namespace iige::input
 
 				for (auto handle : action_handles)
 					{
-					auto& action{actions_container[handle]};
+					auto& action{*handle};
 					action(scene, window, delta_time);
 					}
 				}
